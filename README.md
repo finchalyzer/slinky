@@ -1,5 +1,5 @@
 # Slinky 💎 ✉️
-[💾 Download](https://github.com/finchalyzer/slinky.git) | [💎 Install via Sketchpacks](https://sketchpacks.com/) | [🐞 Report an issue](https://github.com/finchalyzer/slinky/issues/new) | [⭐️ Share love](https://github.com/finchalyzer/slinky/stargazers)
+[💾 Download](https://github.com/finchalyzer/slinky/archive/master.zip) | [💎 Install via Sketchpacks](https://sketchpacks.com/) | [🐞 Report an issue](https://github.com/finchalyzer/slinky/issues/new) | [⭐️ Share love](https://github.com/finchalyzer/slinky/stargazers)
 ## Export your Sketch designs as HTML email templates
 
 ![Slinky demo](http://cdn.finch.io/public/slinky.gif)
@@ -8,7 +8,7 @@ Slinky is a [Sketch](https://www.sketchapp.com) plugin that allows you to export
 
 ### Installation
 
-1. [Download](https://github.com/finchalyzer/slinky.git), unzip and double-click the **Slinky.sketchplugin** file and let Sketch automatically install the plugin for you
+1. [Download](https://github.com/finchalyzer/slinky/archive/master.zip), unzip and double-click the **Slinky.sketchplugin** file and let Sketch automatically install the plugin for you
 2. Open up your Sketch file and select the Artboard with your template design
 3. Go to *Plugins -> Slinky -> Export Selected Artboard* from the Sketch top menu bar
 4. Choose the folder where to export the template
