@@ -1,0 +1,25 @@
+{
+   "name" : "Slinky",
+   "identifier" : "com.sketchapp.slinky-plugin",
+   "version" : "0.1.0",
+   "description" : "Export HTML email templates from Sketch",
+   "authorEmail" : "human@finch.io",
+   "author" : "finchalyzer",
+   "homepage" : "https://github.com/finchalyzer/slinky",
+   "disableCocoaScriptPreprocessor": true,
+   "icon" : "icons/slinky.png",
+   "commands" : [
+      {
+         "script" : "Slinky.js",
+         "handler" : "exportHTML",
+         "name" : "Export selected artboard",
+         "description": "Export selected artboard to HTML email template",
+         "identifier" : "slinky-export"
+      }
+   ],
+   "menu": {
+      "items": [
+         "slinky-export"
+      ]
+   }
+}

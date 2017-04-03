@@ -1,0 +1,28 @@
+{
+   "name": "slinky-sketch",
+   "version": "0.1.0",
+   "description": "Export your Sketch designs  as HTML email templates",
+   "main": "slinky/Slinky.ts",
+   "scripts": {
+      "start": "rollup -c -w"
+   },
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/finchalyzer/slinky.git"
+   },
+   "keywords": [
+      "sketch-app",
+      "sketch-plugin"
+   ],
+   "author": "finchalyzer",
+   "license": "Apache 2.0",
+   "bugs": {
+      "url": "https://github.com/finchalyzer/slinky/issues"
+   },
+   "homepage": "https://github.com/finchalyzer/slinky",
+   "devDependencies": {
+      "rollup": "^0.41.6",
+      "rollup-plugin-typescript": "^0.8.1",
+      "rollup-watch": "^3.2.2"
+   }
+}
