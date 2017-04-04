@@ -29,7 +29,7 @@ function NSrgbaToHex(rgba) {
 }
 
 function template(bgColor, content) {
-    return "<html xmlns=\"http://www.w3.org/1999/xhtml\" style=\"font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;\">\n<head>\n   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n   <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\">\n</head>\n<body bgcolor=\"" + bgColor + "\" style=\"padding:0px;margin:0px;\">\n   <table bgcolor=\"" + bgColor + "\" style=\"box-sizing: border-box; width: 100%; background-color: " + bgColor + "; margin: 0; padding:0;\">\n      <tr>\n         <td style=\"text-align: center;\" valign=\"top\">\n            " + content + "\n         </td>\n      </tr>\n   </table>\n</body>\n</html>";
+    return "<html xmlns=\"http://www.w3.org/1999/xhtml\" style=\"box-sizing: border-box; margin: 0; padding: 0px;\">\n<head>\n   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n   <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\">\n</head>\n<body bgcolor=\"" + bgColor + "\" style=\"padding:0px;margin:0px;\">\n   <table bgcolor=\"" + bgColor + "\" style=\"box-sizing: border-box; width: 100%; background-color: " + bgColor + "; margin: 0; padding:0;\">\n      <tr>\n         <td style=\"text-align: center;\" valign=\"top\">\n            " + content + "\n         </td>\n      </tr>\n   </table>\n</body>\n</html>";
 }
 
 function convert(artboard) {
@@ -241,7 +241,7 @@ function sketchToLayers(layerGroup, offset) {
     var layers = [];
     var assets = [];
     layerGroup.forEach(function (layer, type) {
-        if (layer.isVisible() && !layer.parentGroup().isLayerExportable()) {
+        if (layer.isVisible() && (!offset || !layer.parentGroup().isLayerExportable())) {
             if (layer.class() == MSSymbolInstance && !layer.isLayerExportable()) {
                 var children = sketchToLayers(layer.symbolMaster().layers(), { x: layer.frame().x() + ((offset) ? offset.x : 0), y: layer.frame().y() + ((offset) ? offset.y : 0) });
                 layers = layers.concat(children.layers);

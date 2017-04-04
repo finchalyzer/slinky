@@ -313,7 +313,7 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}){
 
    layerGroup.forEach((layer, type) => {
 
-      if(layer.isVisible() && !layer.parentGroup().isLayerExportable()){
+      if(layer.isVisible() && (!offset || !layer.parentGroup().isLayerExportable())){
 
          if(layer.class() == MSSymbolInstance && !layer.isLayerExportable()){
 
