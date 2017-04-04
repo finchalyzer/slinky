@@ -21,12 +21,12 @@ body{
 section{
    display: flex;
    flex: 1;
-   align-items: center;
    justify-content: center;
 }
 
 article{
    text-align: center;
+   padding-top: calc(12vh);
 }
 
 h1{
@@ -78,6 +78,17 @@ article>a{
    box-shadow: 0 3px 0 0 #39F393;
    border-radius: 100px;
    letter-spacing: 1.23px;
+   margin-bottom: 38px;
+}
+
+article>a:hover{
+   background: #788FF4;
+}
+
+article>a:active{
+   background: #5269D2;
+   transform: translate(0, 3px);
+   box-shadow: none;
 }
 
 footer p{
@@ -102,15 +113,9 @@ footer p a{
 
 }
 
-@media screen and (max-height: 520px){
+@media screen and (max-height: 580px){
 
    section{
       display: inline;
-      padding-top: 52px;
    }
-
-   article>a{
-      margin-bottom: 48px;
-   }
-
 }
