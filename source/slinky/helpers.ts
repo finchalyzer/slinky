@@ -39,3 +39,8 @@ export function NSrgbaToHex(rgba: {redComponent(): number, greenComponent(): num
    return "#" + componentToHex(Math.floor(rgba.redComponent() * 255)) + componentToHex(Math.floor(rgba.greenComponent() * 255)) + componentToHex(Math.floor(rgba.blueComponent() * 255))
 
 }
+
+export function indent(ammount: number, content: string){
+   const indentChar = `    `
+   return `${Array(ammount + 1).join(indentChar)}${content}\n`
+}

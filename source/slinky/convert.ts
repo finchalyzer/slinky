@@ -1,4 +1,4 @@
-import { slugify, rgbaToHex, NSrgbaToHex, isURL, isEmail } from "./helpers"
+import { slugify, rgbaToHex, NSrgbaToHex, isURL, isEmail, indent } from "./helpers"
 import { exportAssets } from "./Appkit"
 import { template } from "./layout"
 
@@ -27,7 +27,8 @@ export function convert(artboard: MSArtboardGroup){
    // Create the table layout
    let table = createTable(layout, {
       width: offset.maxX - offset.minX,
-      height: artboard.frame().height()
+      height: artboard.frame().height(),
+      depth: 3
    })
 
    const bodyBackground = rgbaToHex(artboard.backgroundColorGeneric())
@@ -40,7 +41,10 @@ export function convert(artboard: MSArtboardGroup){
 }
 
 
-function createTable(layers: Layer[], size: {width: number, height: number}){
+function createTable(layers: Layer[], size: {width: number, height: number, depth: number}){
+
+   // Increase indent depth
+   //size.depth++
 
    // Sort layers to start from upper left position
    layers = layers.sort((a, b) => a.x1 - b.x1)
@@ -96,13 +100,13 @@ function createTable(layers: Layer[], size: {width: number, height: number}){
    }
 
    // Start result with table wrapper
-   let result = `<table style="border-collapse:collapse;table-layout:fixed;width:${size.width}px;margin:auto;" border="0" width="${size.width}" height="${size.height}">\n`
+   let result = indent(size.depth, `<table style="border-collapse:collapse;table-layout:fixed;width:${size.width}px;margin:auto;" border="0" width="${size.width}" height="${size.height}">`)
 
 
    // Append <col> widths to result
    if(table.columns.length > 2){
 
-      result += "<colgroup>"
+      result += indent(size.depth + 1, `<colgroup>`)
 
       for(var column = 0; column < table.columns.length - 1; column ++){
 
@@ -111,17 +115,17 @@ function createTable(layers: Layer[], size: {width: number, height: number}){
          if(column === 0 && table.columns[0] > 0) cellWidth += table.columns[0]
          if(column === table.columns.length - 2 && table.columns[column + 1] < size.width) cellWidth += size.width - table.columns[column + 1]
 
-         result += `<col style="width:${cellWidth}px;"/>`
+         result += indent(size.depth+2, `<col style="width:${cellWidth}px;"/>`)
 
       }
 
-      result += "</colgroup>"
+      result += indent(size.depth+1, "</colgroup>")
    }
 
    // Parse the tableGrid content
    tableGrid.forEach((row, rowIndex) => {
 
-      result += ` <tr>\n`
+      result += indent(size.depth + 1, `<tr>`)
 
       let colspan = 1
       let empty = false
@@ -140,7 +144,7 @@ function createTable(layers: Layer[], size: {width: number, height: number}){
          // An empty cell, fill with &shy; for Outlook
          if(typeof cell !== "number"){
             if(cellIndex == tableGrid[0].length - 1 || (typeof tableGrid[rowIndex][cellIndex + 1] === "number" || tableGrid[rowIndex][cellIndex + 1] === "rowspanned" )){
-               result += `   <td colspan="${colspan}" style="width:${cellWidth}px;height:${table.rows[rowIndex + 1] - table.rows[rowIndex]}px">&shy;</td>\n`
+               result += indent(size.depth + 2, `<td colspan="${colspan}" style="width:${cellWidth}px;height:${table.rows[rowIndex + 1] - table.rows[rowIndex]}px">&shy;</td>`)
                colspan = 1
                empty = false
             } else {
@@ -181,10 +185,20 @@ function createTable(layers: Layer[], size: {width: number, height: number}){
             cellStyle += `height:${layers[cell].y2 - layers[cell].y1}px;`
 
             // Prepare cell's content
-            const cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell]) : createTable(layers[cell].children, {width: layers[cell].x2 - layers[cell].x1, height: layers[cell].y2 - layers[cell].y1})
+            const cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth) : createTable(layers[cell].children, {width: layers[cell].x2 - layers[cell].x1, height: layers[cell].y2 - layers[cell].y1, depth: size.depth + 4})
             const isLink = (isURL(layers[cell].title))
 
-            result +=  `   <td style="${cellStyle}" colspan="${colspan}" rowspan="${rowspan}">${(isLink) ? `<a href="${layers[cell].title}" style="text-decoration:none;" target="_blank">` : ""}<div style="${childStyle}${getCellStyle(layers[cell])}">${cellContent}</div>${(isLink) ? `</a>` : ""}</td>\n`
+            result +=  indent(size.depth + 2, `<td style="${cellStyle}" colspan="${colspan}" rowspan="${rowspan}">`)
+
+            if(isLink) result += indent(size.depth + 3, `<a href="${layers[cell].title}" style="text-decoration:none;" target="_blank">`)
+
+            result +=  indent(size.depth + 3, `<div style="${childStyle}${getCellStyle(layers[cell])}">`)
+            result +=  cellContent
+            result +=  indent(size.depth + 3, `</div>`)
+
+            if(isLink) result += indent(size.depth + 3, `</a>`)
+
+            result +=  indent(size.depth + 2, `</td>`)
 
             colspan = 1
 
@@ -192,11 +206,11 @@ function createTable(layers: Layer[], size: {width: number, height: number}){
 
       })
 
-      result += ` </tr>\n`
+      result += indent(size.depth + 1, `</tr>`)
 
    })
 
-   return `${result}\n</table>`
+   return `${result}${indent(size.depth, `</table>`)}`
 
 }
 
@@ -219,10 +233,12 @@ function relatativePosition(layout: Layer[], offset: {x: number, y: number}){
 
 }
 
-function getCellContent(layer: Layer){
+function getCellContent(layer: Layer, depth: number){
+
+   depth += 4
 
    if(layer.source && layer.source.length > 0){
-      return `<img src="${layer.source}" width="${layer.x2 - layer.x1 - layer.border*2}" height="${layer.y2 - layer.y1 - layer.border*2}" alt="${layer.title}"/>`
+      return indent(depth, `<img src="${layer.source}" style="display:block;" width="${layer.x2 - layer.x1 - layer.border*2}" height="${layer.y2 - layer.y1 - layer.border*2}" alt="${layer.title}"/>`)
    }
 
    if(layer.content && layer.content.length > 0){
@@ -243,9 +259,9 @@ function getCellContent(layer: Layer){
          const isLink = isURL(textLayer.text)
 
          if(isLink){
-            content += `<a href="${(isEmail(textLayer.text)) ? "mailto:" : ""}${textLayer.text}" style="${linkStyle}${style}" target="_blank" style="${style}">${textLayer.text}</a>`
+            content += indent(depth, `<a href="${(isEmail(textLayer.text)) ? "mailto:" : ""}${textLayer.text}" style="${linkStyle}${style}" target="_blank" style="${style}">${textLayer.text}</a>`)
          } else {
-            content += `<span style="${style}">${textLayer.text.replace("\n","<br/>")}</span>`
+            content += indent(depth, `<span style="${style}">${textLayer.text.replace("\n","<br/>")}</span>`)
          }
 
 

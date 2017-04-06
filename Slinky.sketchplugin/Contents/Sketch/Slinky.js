@@ -27,9 +27,14 @@ function NSrgbaToHex(rgba) {
     }
     return "#" + componentToHex(Math.floor(rgba.redComponent() * 255)) + componentToHex(Math.floor(rgba.greenComponent() * 255)) + componentToHex(Math.floor(rgba.blueComponent() * 255));
 }
+function indent(ammount, content) {
+    var indentChar = "    ";
+    return "" + Array(ammount + 1).join(indentChar) + content + "\n";
+}
+//# sourceMappingURL=helpers.js.map
 
 function template(bgColor, content) {
-    return "<html xmlns=\"http://www.w3.org/1999/xhtml\" style=\"box-sizing: border-box; margin: 0; padding: 0px;\">\n<head>\n   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n   <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\">\n</head>\n<body bgcolor=\"" + bgColor + "\" style=\"padding:0px;margin:0px;\">\n   <table bgcolor=\"" + bgColor + "\" style=\"box-sizing: border-box; width: 100%; background-color: " + bgColor + "; margin: 0; padding:0;\">\n      <tr>\n         <td style=\"text-align: center;\" valign=\"top\">\n            " + content + "\n         </td>\n      </tr>\n   </table>\n</body>\n</html>";
+    return "<!doctype html><html style=\"box-sizing: border-box; margin: 0; padding: 0px;\">\n<head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\">\n    <style type=\"text/css\">\n        body{\n            margin:0;\n            padding:0;\n        }\n        img{\n            border:0 none;\n            height:auto;\n            line-height:100%;\n            outline:none;\n            text-decoration:none;\n        }\n            a img{\n            border:0 none;\n        }\n            table, td{\n            border-collapse:collapse;\n        }\n        #bodyTable{\n            height:100% !important;\n            margin:0;\n            padding:0;\n            width:100% !important;\n        }\n    </style>\n</head>\n<body bgcolor=\"" + bgColor + "\" style=\"padding:0px;margin:0px;\">\n    <table id=\"bodyTable\" bgcolor=\"" + bgColor + "\" style=\"box-sizing: border-box; width: 100%; height: 100%; background-color: " + bgColor + "; margin: 0; padding:0;\">\n        <tr>\n            <td style=\"text-align: center;\" valign=\"top\">\n    " + content + "            </td>\n        </tr>\n    </table>\n</body>\n</html>";
 }
 
 function convert(artboard) {
@@ -49,7 +54,8 @@ function convert(artboard) {
     layout = relatativePosition(layout, { x: offset.minX, y: 0 });
     var table = createTable(layout, {
         width: offset.maxX - offset.minX,
-        height: artboard.frame().height()
+        height: artboard.frame().height(),
+        depth: 3
     });
     var bodyBackground = rgbaToHex(artboard.backgroundColorGeneric());
     return {
@@ -99,21 +105,21 @@ function createTable(layers, size) {
             _loop_1();
         }
     }
-    var result = "<table style=\"border-collapse:collapse;table-layout:fixed;width:" + size.width + "px;margin:auto;\" border=\"0\" width=\"" + size.width + "\" height=\"" + size.height + "\">\n";
+    var result = indent(size.depth, "<table style=\"border-collapse:collapse;table-layout:fixed;width:" + size.width + "px;margin:auto;\" border=\"0\" width=\"" + size.width + "\" height=\"" + size.height + "\">");
     if (table.columns.length > 2) {
-        result += "<colgroup>";
+        result += indent(size.depth + 1, "<colgroup>");
         for (var column = 0; column < table.columns.length - 1; column++) {
             var cellWidth = table.columns[column + 1] - table.columns[column];
             if (column === 0 && table.columns[0] > 0)
                 cellWidth += table.columns[0];
             if (column === table.columns.length - 2 && table.columns[column + 1] < size.width)
                 cellWidth += size.width - table.columns[column + 1];
-            result += "<col style=\"width:" + cellWidth + "px;\"/>";
+            result += indent(size.depth + 2, "<col style=\"width:" + cellWidth + "px;\"/>");
         }
-        result += "</colgroup>";
+        result += indent(size.depth + 1, "</colgroup>");
     }
     tableGrid.forEach(function (row, rowIndex) {
-        result += " <tr>\n";
+        result += indent(size.depth + 1, "<tr>");
         var colspan = 1;
         var empty = false;
         row.forEach(function (cell, cellIndex) {
@@ -124,7 +130,7 @@ function createTable(layers, size) {
             }
             else if (typeof cell !== "number") {
                 if (cellIndex == tableGrid[0].length - 1 || (typeof tableGrid[rowIndex][cellIndex + 1] === "number" || tableGrid[rowIndex][cellIndex + 1] === "rowspanned")) {
-                    result += "   <td colspan=\"" + colspan + "\" style=\"width:" + cellWidth + "px;height:" + (table.rows[rowIndex + 1] - table.rows[rowIndex]) + "px\">&shy;</td>\n";
+                    result += indent(size.depth + 2, "<td colspan=\"" + colspan + "\" style=\"width:" + cellWidth + "px;height:" + (table.rows[rowIndex + 1] - table.rows[rowIndex]) + "px\">&shy;</td>");
                     colspan = 1;
                     empty = false;
                 }
@@ -157,15 +163,23 @@ function createTable(layers, size) {
                 var cellStyle = "vertical-align:top;padding:0px;";
                 cellStyle += "width:" + (layers[cell].x2 - layers[cell].x1) + "px;";
                 cellStyle += "height:" + (layers[cell].y2 - layers[cell].y1) + "px;";
-                var cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell]) : createTable(layers[cell].children, { width: layers[cell].x2 - layers[cell].x1, height: layers[cell].y2 - layers[cell].y1 });
+                var cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth) : createTable(layers[cell].children, { width: layers[cell].x2 - layers[cell].x1, height: layers[cell].y2 - layers[cell].y1, depth: size.depth + 4 });
                 var isLink = (isURL(layers[cell].title));
-                result += "   <td style=\"" + cellStyle + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">" + ((isLink) ? "<a href=\"" + layers[cell].title + "\" style=\"text-decoration:none;\" target=\"_blank\">" : "") + "<div style=\"" + childStyle + getCellStyle(layers[cell]) + "\">" + cellContent + "</div>" + ((isLink) ? "</a>" : "") + "</td>\n";
+                result += indent(size.depth + 2, "<td style=\"" + cellStyle + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
+                if (isLink)
+                    result += indent(size.depth + 3, "<a href=\"" + layers[cell].title + "\" style=\"text-decoration:none;\" target=\"_blank\">");
+                result += indent(size.depth + 3, "<div style=\"" + childStyle + getCellStyle(layers[cell]) + "\">");
+                result += cellContent;
+                result += indent(size.depth + 3, "</div>");
+                if (isLink)
+                    result += indent(size.depth + 3, "</a>");
+                result += indent(size.depth + 2, "</td>");
                 colspan = 1;
             }
         });
-        result += " </tr>\n";
+        result += indent(size.depth + 1, "</tr>");
     });
-    return result + "\n</table>";
+    return "" + result + indent(size.depth, "</table>");
 }
 function relatativePosition(layout, offset) {
     for (var i = 0; i < layout.length; i++) {
@@ -179,9 +193,10 @@ function relatativePosition(layout, offset) {
     }
     return layout;
 }
-function getCellContent(layer) {
+function getCellContent(layer, depth) {
+    depth += 4;
     if (layer.source && layer.source.length > 0) {
-        return "<img src=\"" + layer.source + "\" width=\"" + (layer.x2 - layer.x1 - layer.border * 2) + "\" height=\"" + (layer.y2 - layer.y1 - layer.border * 2) + "\" alt=\"" + layer.title + "\"/>";
+        return indent(depth, "<img src=\"" + layer.source + "\" style=\"display:block;\" width=\"" + (layer.x2 - layer.x1 - layer.border * 2) + "\" height=\"" + (layer.y2 - layer.y1 - layer.border * 2) + "\" alt=\"" + layer.title + "\"/>");
     }
     if (layer.content && layer.content.length > 0) {
         var content_1 = "";
@@ -197,10 +212,10 @@ function getCellContent(layer) {
             }
             var isLink = isURL(textLayer.text);
             if (isLink) {
-                content_1 += "<a href=\"" + ((isEmail(textLayer.text)) ? "mailto:" : "") + textLayer.text + "\" style=\"" + linkStyle + style + "\" target=\"_blank\" style=\"" + style + "\">" + textLayer.text + "</a>";
+                content_1 += indent(depth, "<a href=\"" + ((isEmail(textLayer.text)) ? "mailto:" : "") + textLayer.text + "\" style=\"" + linkStyle + style + "\" target=\"_blank\" style=\"" + style + "\">" + textLayer.text + "</a>");
             }
             else {
-                content_1 += "<span style=\"" + style + "\">" + textLayer.text.replace("\n", "<br/>") + "</span>";
+                content_1 += indent(depth, "<span style=\"" + style + "\">" + textLayer.text.replace("\n", "<br/>") + "</span>");
             }
         });
         return content_1;
@@ -358,6 +373,7 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
+//# sourceMappingURL=convert.js.map
 
 function saveDialog(title, options) {
     var panel = NSSavePanel.savePanel();
@@ -412,6 +428,7 @@ function exportAssets(context, itemIds, outputFolder) {
     task.standardError = errPipe;
     task.launch();
 }
+//# sourceMappingURL=index.js.map
 
 function exportHTML(context) {
     if (!context)
@@ -441,3 +458,4 @@ function exportHTML(context) {
     }
 }
 var defaultFunc = exportHTML();
+//# sourceMappingURL=Slinky.js.map
