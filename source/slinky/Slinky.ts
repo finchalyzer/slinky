@@ -1,16 +1,15 @@
 import { convert } from "./convert"
-import { saveDialog, saveFile, exportAssets } from "./AppKit"
+import { dialog, saveDialog, saveFile, exportAssets } from "./AppKit"
 import { slugify } from "./helpers"
 
 function exportHTML(context?: SketchContext) {
 
    if(!context) return
 
-   const app = NSApplication.sharedApplication()
    const artboard = context.document.currentPage().currentArtboard()
 
    if(!artboard){
-      app.displayDialog_withTitle("Select an artboard first!", "⚠️ Slinky")
+      dialog("Select an artboard first!", "⚠️ Slinky")
       return
    }
 
@@ -37,7 +36,7 @@ function exportHTML(context?: SketchContext) {
       const updateUrl = NSURL.URLWithString(`file://${exportPath}`)
       workspace.openURL(updateUrl)
    } else {
-      app.displayDialog_withTitle("Could not export the template :/ \n\nPlease, report an issue at\nhttps://github.com/finchalyzer/slinky", "⚠️ Slinky")
+      dialog("Could not export the template :/ \n\nPlease, report an issue at\nhttps://github.com/finchalyzer/slinky", "⚠️ Slinky")
    }
 
 }

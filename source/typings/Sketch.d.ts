@@ -15,6 +15,7 @@ interface MSLayer{
       rulerX(): number
       rulerY(): number
    }
+   layers(): MSShapePathLayer[]
    className(): string
    textAlignment(): number
    CSSAttributes(): any
@@ -35,6 +36,17 @@ interface MSLayer{
          objectAtIndex(index: number): NSFont
       }
    }
+   firstPoint(): {
+      point(): {x: number, y: number}
+   }
+   lastPoint(): {
+      point(): {x: number, y: number}
+   }
+   style():{
+      fill():{
+         color(): any
+      }
+   }
 }
 
 declare var MSTextLayer: MSLayer
@@ -42,6 +54,18 @@ declare var MSLayerGroup: MSLayer
 declare var MSShapeGroup: MSLayer
 declare var MSBitmapLayer: MSLayer
 declare var MSSymbolInstance: MSLayer
+
+interface MSCurvePoint{
+   point():{x: number, y: number}
+}
+
+interface MSShapePathLayer{
+   class(): any
+   allCurvePoints(): MSCurvePoint[]
+}
+
+declare var MSShapePathLayer: MSShapePathLayer
+declare var MSOvalShape: MSShapePathLayer
 
 interface MSArtboardGroup{
    objectID(): string
