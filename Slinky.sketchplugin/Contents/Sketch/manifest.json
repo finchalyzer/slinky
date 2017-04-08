@@ -14,7 +14,8 @@
          "handler" : "exportHTML",
          "name" : "Export selected artboard",
          "description": "Export selected artboard to HTML email template",
-         "identifier" : "slinky-export"
+         "identifier" : "slinky-export",
+         "shortcut": "cmd alt e",
       }
    ],
    "menu": {

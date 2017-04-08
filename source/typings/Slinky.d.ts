@@ -14,3 +14,13 @@ interface Layer{
    source: string
    children: Layer[]
 }
+
+interface TableSize{
+   width: number
+   height: number
+   offsetX: number
+   offsetY: number
+   originalWidth: number
+   originalHeight: number
+   depth: number
+}

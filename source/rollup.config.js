@@ -1,4 +1,5 @@
 import typescript from "rollup-plugin-typescript"
+import resolve from "rollup-plugin-node-resolve"
 
 export default {
    entry: "./slinky/Slinky.ts",
@@ -6,6 +7,7 @@ export default {
    format: "es",
    sourceMap: false,
    plugins: [
-      typescript()
+      typescript(),
+      resolve()
    ]
 }

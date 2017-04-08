@@ -1,3 +1,13 @@
+export function dialog(message: any, title?: string){
+
+   const app = NSApplication.sharedApplication()
+
+   if(typeof message !== "string") message = JSON.stringify(message)
+
+   app.displayDialog_withTitle(message, title || "Slinky")
+
+}
+
 export function saveDialog(title: string, options?:{promptTitle: string, fileName: string}){
 
    const panel =  NSSavePanel.savePanel()
