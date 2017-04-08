@@ -1,5 +1,6 @@
 # Slinky 💎 ✉️
-[💾 Download](https://github.com/finchalyzer/slinky/archive/master.zip) | [💎 One-click Install via Sketchpacks](https://sketchpacks.com/finchalyzer/slinky/install) | [🐞 Report an issue](https://github.com/finchalyzer/slinky/issues/new) | [⭐️ Share love](https://github.com/finchalyzer/slinky/stargazers)
+💾 [Download](https://github.com/finchalyzer/slinky/releases/download/v0.1.0/Slinky.zip) | 💎 [One-click Install via Sketchpacks](https://sketchpacks.com/finchalyzer/slinky/install) | 🐞 [Report an issue](https://github.com/finchalyzer/slinky/issues/new) | ⭐️ [Share love](https://github.com/finchalyzer/slinky/stargazers)
+--- | --- | --- | ---
 ## Export your Sketch designs as HTML email templates
 
 ![Slinky demo](http://cdn.finch.io/public/slinky.gif)
@@ -31,11 +32,6 @@ Link support is a bit hacky for now. You have ~~two~~ three options:
    - Name your group/shape/layer as the link you want to use for it. Slinky will catch that and automatically convert that object to a link
    - Slinky will automatically convert to links text layers containing a valid url or email
    - Add the links afterwards in the code or with whatever tool you will use for sending the email
-
-### ⚠️ Layout
-Overlapping layers won't work. Slinky respects the good old table layout and some things just don't work there :/
-
-![](http://cdn.finch.io/public/slinky-overlapping.png)
 
 ### ⚠️ Fonts
 Slinky does not check the template for custom fonts *(yet)* and will export the template as it is. For the safest result across different email clients, we suggest you to use cross-platform fonts only:
