@@ -1,5 +1,6 @@
 interface Layer{
    title: string
+   url?: string
    id: string
    x1: number
    y1: number

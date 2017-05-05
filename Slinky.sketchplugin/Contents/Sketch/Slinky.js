@@ -2007,8 +2007,8 @@ function template(bgColor, content) {
 }
 //# sourceMappingURL=layout.js.map
 
-function convert(artboard) {
-    var data = sketchToLayers(artboard.layers());
+function convert(artboard, command) {
+    var data = sketchToLayers(artboard.layers(), null, command);
     var offset = {
         minX: artboard.frame().width(),
         maxX: 0,
@@ -2162,10 +2162,10 @@ function createTable(layers, size) {
                     depth: size.depth + 4
                 };
                 var cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize);
-                var isLink = (isURL(layers[cell].title));
+                var isLink = (isURL(layers[cell].url));
                 result += indent(size.depth + 2, "<td style=\"" + cellStyle + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
                 if (isLink)
-                    result += indent(size.depth + 3, "<a href=\"" + layers[cell].title + "\" style=\"text-decoration:none;\" target=\"_blank\">");
+                    result += indent(size.depth + 3, "<a href=\"" + ((isEmail(layers[cell].url)) ? "mailto:" : "") + layers[cell].url + "\" style=\"text-decoration:none;\" target=\"_blank\">");
                 result += indent(size.depth + 3, "<div style=\"" + getCellStyle(layers[cell], childTableSize, { x: cellOffsetX, y: cellOffsetY }) + "\">");
                 result += cellContent;
                 result += indent(size.depth + 3, "</div>");
@@ -2309,19 +2309,19 @@ function appendLayers(layout, currentLayer) {
     if (!appended)
         layout.push(currentLayer);
 }
-function sketchToLayers(layerGroup, offset) {
+function sketchToLayers(layerGroup, offset, command) {
     var layers = [];
     var assets = [];
     layerGroup.forEach(function (layer, type) {
         if (layer.isVisible() && (!offset || !layer.parentGroup().isLayerExportable())) {
             if (layer.class() == MSSymbolInstance && !layer.isLayerExportable()) {
-                var children = sketchToLayers(layer.symbolMaster().layers(), { x: layer.frame().x() + ((offset) ? offset.x : 0), y: layer.frame().y() + ((offset) ? offset.y : 0) });
+                var children = sketchToLayers(layer.symbolMaster().layers(), { x: layer.frame().x() + ((offset) ? offset.x : 0), y: layer.frame().y() + ((offset) ? offset.y : 0) }, command);
                 layers = layers.concat(children.layers);
                 assets = assets.concat(children.assets);
             }
             else if (layer.class() == MSLayerGroup && !layer.isLayerExportable()) {
                 if (!offset) {
-                    var children = sketchToLayers(layer.children(), { x: layer.frame().x(), y: layer.frame().y() });
+                    var children = sketchToLayers(layer.children(), { x: layer.frame().x(), y: layer.frame().y() }, command);
                     layers = layers.concat(children.layers);
                     assets = assets.concat(children.assets);
                 }
@@ -2333,6 +2333,7 @@ function sketchToLayers(layerGroup, offset) {
                     layers.unshift({
                         id: unescape(layer.objectID()),
                         title: unescape(layer.name()),
+                        url: unescape(command.valueForKey_onLayer("hrefURL", layer)),
                         x1: Math.round(layer.frame().x() + ((offset) ? offset.x : 0)),
                         y1: Math.round(layer.frame().y() + ((offset) ? offset.y : 0)),
                         x2: Math.round(layer.frame().x() + layer.frame().width() + ((offset) ? offset.x : 0)),
@@ -2439,8 +2440,25 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
-//# sourceMappingURL=convert.js.map
 
+var pluginIdentifier = "com.sketchapp.slinky-plugin";
+function setPreferences(key, value) {
+    var settings = NSUserDefaults.standardUserDefaults();
+    var preferences = (!settings.dictionaryForKey(pluginIdentifier)) ? NSMutableDictionary.alloc().init() : NSMutableDictionary.dictionaryWithDictionary(settings.dictionaryForKey(pluginIdentifier));
+    preferences.setObject_forKey(value, key);
+    settings.setObject_forKey(preferences, pluginIdentifier);
+    settings.synchronize();
+}
+function getPreferences(key) {
+    var settings = NSUserDefaults.standardUserDefaults();
+    if (!settings.dictionaryForKey(pluginIdentifier)) {
+        var preferences = NSMutableDictionary.alloc().init();
+        preferences.setObject_forKey("0", "sidebar");
+        settings.setObject_forKey(preferences, pluginIdentifier);
+        settings.synchronize();
+    }
+    return unescape(settings.dictionaryForKey(pluginIdentifier).objectForKey(key));
+}
 function dialog(message, title) {
     var app = NSApplication.sharedApplication();
     if (typeof message !== "string")
@@ -2502,10 +2520,82 @@ function exportAssets(context, itemIds, outputFolder) {
 }
 //# sourceMappingURL=index.js.map
 
+function getValue$2(context, identifier, parentID) {
+    var panels = getPanel(identifier, parentID);
+    if (!panels || !panels.panel)
+        return;
+    var output = unescape(panels.panel.stringByEvaluatingJavaScriptFromString("getValue()"));
+    return output;
+}
+function setValue(context, identifier, parentID, value) {
+    var panels = getPanel(identifier, parentID);
+    if (!panels || !panels.panel)
+        return;
+    panels.panel.stringByEvaluatingJavaScriptFromString("setValue('" + value + "')");
+}
+function createPanel(context, identifier, parentID, size, remove) {
+    var document = NSClassFromString("MSDocument").performSelector(NSSelectorFromString("currentDocument"));
+    var panels = getPanel(identifier, parentID);
+    if (remove) {
+        if (panels.panel) {
+            panels.panel.removeFromSuperview();
+            var parentFrame = panels.container.frame();
+            parentFrame.size.height = parentFrame.size.height - size.height;
+            panels.container.setFrame(parentFrame);
+            document.inspectorController().selectionDidChangeTo(context.selection);
+        }
+    }
+    else if (!panels.panel) {
+        var panel = WebView.alloc().init();
+        var childFrame = panel.frame();
+        childFrame.size.width = size.width;
+        childFrame.size.height = size.height;
+        panel.setFrame(childFrame);
+        panel.identifier = identifier;
+        var url = unescape(context.plugin.urlForResourceNamed("slinky.html"));
+        panel.setMainFrameURL_(url);
+        panels.container.addSubview(panel);
+        var parentFrame = panels.container.frame();
+        parentFrame.size.height = parentFrame.size.height + size.height;
+        panels.container.setFrame(parentFrame);
+        document.inspectorController().selectionDidChangeTo(context.selection);
+    }
+}
+function getPanel(identifier, parentID) {
+    var document = NSClassFromString("MSDocument").performSelector(NSSelectorFromString("currentDocument"));
+    var contentView = document.inspectorController().view();
+    if (!contentView)
+        return null;
+    var container = viewSearch(contentView, parentID);
+    var panel = viewSearch(contentView, identifier);
+    return {
+        container: container,
+        panel: panel
+    };
+}
+function viewSearch(nsview, identifier) {
+    var found = null;
+    if (nsview.subviews().length > 0) {
+        nsview.subviews().forEach(function (subview) {
+            if (found)
+                return;
+            if (subview.identifier() == identifier) {
+                found = subview;
+            }
+            else {
+                found = viewSearch(subview, identifier);
+            }
+        });
+    }
+    return found;
+}
+//# sourceMappingURL=sidebar.js.map
+
 function exportHTML(context) {
     if (!context)
         return;
     var artboard = context.document.currentPage().currentArtboard();
+    var command = context.command;
     if (!artboard) {
         dialog("Select an artboard first!", "⚠️ Slinky");
         return;
@@ -2516,7 +2606,7 @@ function exportHTML(context) {
     });
     if (!exportPath)
         return;
-    var content = convert(artboard);
+    var content = convert(artboard, command);
     var result = saveFile(content.table, exportPath);
     exportAssets(context, content.assets, exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/");
     if (result) {
@@ -2528,5 +2618,44 @@ function exportHTML(context) {
         dialog("Could not export the template :/ \n\nPlease, report an issue at\nhttps://github.com/finchalyzer/slinky", "⚠️ Slinky");
     }
 }
-var defaultFunc = exportHTML();
+function toggleURL(context) {
+    if (!context)
+        return;
+    var sidebarEnabled = (getPreferences("sidebar") === "1");
+    setPreferences("sidebar", (sidebarEnabled) ? "0" : "1");
+    createPanel(context, "slinky_url", "view_coordinates", { width: 230, height: 38 }, sidebarEnabled);
+}
+function onSelectionChanged(context) {
+    if (!context)
+        return;
+    var command = context.command;
+    var sidebarEnabled = (getPreferences("sidebar") === "1");
+    if (sidebarEnabled) {
+        createPanel(context, "slinky_url", "view_coordinates", { width: 230, height: 38 }, false);
+    }
+    else
+        return;
+    var oldSelection = context.actionContext.oldSelection;
+    var newSelection = context.actionContext.document.selectedLayers().layers();
+    var oldURL = getValue$2(context, "slinky_url", "view_coordinates");
+    var newUrl = null;
+    if (oldURL !== "multiple") {
+        oldSelection.forEach(function (layer) {
+            command.setValue_forKey_onLayer(oldURL, 'hrefURL', layer);
+        });
+    }
+    newSelection.forEach(function (layer) {
+        var value = unescape(command.valueForKey_onLayer('hrefURL', layer));
+        if (!newUrl)
+            newUrl = value;
+        if (newUrl !== value)
+            newUrl = "multiple";
+    });
+    if (!newUrl || newUrl === "null")
+        newUrl = "";
+    setValue(context, "slinky_url", "view_coordinates", newUrl);
+}
+var exportHTMLFunc = exportHTML();
+var toggleURLFunc = toggleURL();
+var selectionChangeFunc = onSelectionChanged();
 //# sourceMappingURL=Slinky.js.map

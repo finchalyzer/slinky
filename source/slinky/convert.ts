@@ -3,10 +3,10 @@ import clone from "lodash-es/clone"
 import { rgbaToHex, NSrgbaToHex, isURL, isEmail, indent, expandCSS, contractCSS, isCircle } from "./helpers"
 import { template } from "./layout"
 
-export function convert(artboard: MSArtboardGroup){
+export function convert(artboard: MSArtboardGroup, command: MSPluginCommand){
 
    // Get all visible layers from the artboard
-   const data = sketchToLayers(artboard.layers())
+   const data = sketchToLayers(artboard.layers(), null, command)
 
    let offset ={
       minX: artboard.frame().width(),
@@ -223,11 +223,11 @@ function createTable(layers: Layer[], size: TableSize){
             // Prepare cell's content
             const cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize)
 
-            const isLink = (isURL(layers[cell].title))
+            const isLink = (isURL(layers[cell].url))
 
             result +=  indent(size.depth + 2, `<td style="${cellStyle}" colspan="${colspan}" rowspan="${rowspan}">`)
 
-            if(isLink) result += indent(size.depth + 3, `<a href="${layers[cell].title}" style="text-decoration:none;" target="_blank">`)
+            if(isLink) result += indent(size.depth + 3, `<a href="${(isEmail(layers[cell].url)) ? "mailto:" : ""}${layers[cell].url}" style="text-decoration:none;" target="_blank">`)
 
             result +=  indent(size.depth + 3, `<div style="${getCellStyle(layers[cell], childTableSize, {x: cellOffsetX, y: cellOffsetY})}">`)
             result +=  cellContent
@@ -437,7 +437,7 @@ function appendLayers(layout: Layer[], currentLayer: Layer){
 
 }
 
-function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}){
+function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}, command: MSPluginCommand){
 
    let layers: Layer[] = []
    let assets: string[] = []
@@ -448,7 +448,7 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}){
 
          if(layer.class() == MSSymbolInstance && !layer.isLayerExportable()){
 
-            const children = sketchToLayers( layer.symbolMaster().layers(), {x: layer.frame().x()  + ((offset) ? offset.x : 0), y: layer.frame().y()  + ((offset) ? offset.y : 0)})
+            const children = sketchToLayers( layer.symbolMaster().layers(), {x: layer.frame().x()  + ((offset) ? offset.x : 0), y: layer.frame().y()  + ((offset) ? offset.y : 0)}, command)
 
             layers = layers.concat(children.layers)
             assets = assets.concat(children.assets)
@@ -459,7 +459,7 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}){
 
             if(!offset){
 
-               const children = sketchToLayers(layer.children(), {x: layer.frame().x(), y: layer.frame().y()})
+               const children = sketchToLayers(layer.children(), {x: layer.frame().x(), y: layer.frame().y()}, command)
 
                layers = layers.concat(children.layers)
                assets = assets.concat(children.assets)
@@ -477,6 +477,7 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}){
                layers.unshift({
                   id: unescape(layer.objectID()),
                   title: unescape(layer.name()),
+                  url: unescape(command.valueForKey_onLayer("hrefURL", layer)),
                   x1: Math.round(layer.frame().x() + ((offset) ? offset.x : 0)),
                   y1: Math.round(layer.frame().y() + ((offset) ? offset.y : 0)),
                   x2: Math.round(layer.frame().x() + layer.frame().width()  + ((offset) ? offset.x : 0)),
