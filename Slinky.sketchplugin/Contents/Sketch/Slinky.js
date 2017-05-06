@@ -2440,6 +2440,7 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
+//# sourceMappingURL=convert.js.map
 
 var pluginIdentifier = "com.sketchapp.slinky-plugin";
 function setPreferences(key, value) {
@@ -2520,43 +2521,58 @@ function exportAssets(context, itemIds, outputFolder) {
 }
 //# sourceMappingURL=index.js.map
 
-function getValue$2(context, identifier, parentID) {
-    var panels = getPanel(identifier, parentID);
+var sidebarID = "slinky_url";
+var sidebarParent = "view_coordinates";
+var sideberSize = {
+    width: 230,
+    height: 38
+};
+function getValue$2(context) {
+    var panels = getPanel(sidebarID, sidebarParent);
     if (!panels || !panels.panel)
         return;
     var output = unescape(panels.panel.stringByEvaluatingJavaScriptFromString("getValue()"));
     return output;
 }
-function setValue(context, identifier, parentID, value) {
-    var panels = getPanel(identifier, parentID);
-    if (!panels || !panels.panel)
-        return;
-    panels.panel.stringByEvaluatingJavaScriptFromString("setValue('" + value + "')");
-}
-function createPanel(context, identifier, parentID, size, remove) {
+function updateSidebar(context, remove) {
     var document = NSClassFromString("MSDocument").performSelector(NSSelectorFromString("currentDocument"));
-    var panels = getPanel(identifier, parentID);
+    var panels = getPanel(sidebarID, sidebarParent);
     if (remove) {
         if (panels.panel) {
             panels.panel.removeFromSuperview();
             var parentFrame = panels.container.frame();
-            parentFrame.size.height = parentFrame.size.height - size.height;
+            parentFrame.size.height = parentFrame.size.height - sideberSize.height;
             panels.container.setFrame(parentFrame);
             document.inspectorController().selectionDidChangeTo(context.selection);
         }
+        return;
     }
-    else if (!panels.panel) {
+    var url = null;
+    var selection = document.selectedLayers().layers();
+    selection.forEach(function (layer) {
+        var value = unescape(context.command.valueForKey_onLayer('hrefURL', layer));
+        if (!url)
+            url = value;
+        if (url !== value)
+            url = "multiple";
+    });
+    if (!url || url === "null")
+        url = "";
+    if (panels.panel) {
+        panels.panel.stringByEvaluatingJavaScriptFromString("setValue('" + url + "')");
+    }
+    else {
         var panel = WebView.alloc().init();
         var childFrame = panel.frame();
-        childFrame.size.width = size.width;
-        childFrame.size.height = size.height;
+        childFrame.size.width = sideberSize.width;
+        childFrame.size.height = sideberSize.height;
         panel.setFrame(childFrame);
-        panel.identifier = identifier;
-        var url = unescape(context.plugin.urlForResourceNamed("slinky.html"));
-        panel.setMainFrameURL_(url);
+        panel.identifier = sidebarID;
+        var path = unescape(context.plugin.urlForResourceNamed("slinky.html")) + ("#" + url);
+        panel.setMainFrameURL_(path);
         panels.container.addSubview(panel);
         var parentFrame = panels.container.frame();
-        parentFrame.size.height = parentFrame.size.height + size.height;
+        parentFrame.size.height = parentFrame.size.height + sideberSize.height;
         panels.container.setFrame(parentFrame);
         document.inspectorController().selectionDidChangeTo(context.selection);
     }
@@ -2623,39 +2639,23 @@ function toggleURL(context) {
         return;
     var sidebarEnabled = (getPreferences("sidebar") === "1");
     setPreferences("sidebar", (sidebarEnabled) ? "0" : "1");
-    createPanel(context, "slinky_url", "view_coordinates", { width: 230, height: 38 }, sidebarEnabled);
+    updateSidebar(context, sidebarEnabled);
 }
 function onSelectionChanged(context) {
     if (!context)
         return;
-    var command = context.command;
     var sidebarEnabled = (getPreferences("sidebar") === "1");
-    if (sidebarEnabled) {
-        createPanel(context, "slinky_url", "view_coordinates", { width: 230, height: 38 }, false);
-    }
-    else
+    if (!sidebarEnabled)
         return;
-    var oldSelection = context.actionContext.oldSelection;
-    var newSelection = context.actionContext.document.selectedLayers().layers();
-    var oldURL = getValue$2(context, "slinky_url", "view_coordinates");
-    var newUrl = null;
-    if (oldURL !== "multiple") {
-        oldSelection.forEach(function (layer) {
-            command.setValue_forKey_onLayer(oldURL, 'hrefURL', layer);
+    var selection = context.actionContext.oldSelection;
+    var url = getValue$2(context);
+    if (url && url !== "multiple") {
+        selection.forEach(function (layer) {
+            context.command.setValue_forKey_onLayer(url, 'hrefURL', layer);
         });
     }
-    newSelection.forEach(function (layer) {
-        var value = unescape(command.valueForKey_onLayer('hrefURL', layer));
-        if (!newUrl)
-            newUrl = value;
-        if (newUrl !== value)
-            newUrl = "multiple";
-    });
-    if (!newUrl || newUrl === "null")
-        newUrl = "";
-    setValue(context, "slinky_url", "view_coordinates", newUrl);
+    updateSidebar(context);
 }
 var exportHTMLFunc = exportHTML();
 var toggleURLFunc = toggleURL();
 var selectionChangeFunc = onSelectionChanged();
-//# sourceMappingURL=Slinky.js.map

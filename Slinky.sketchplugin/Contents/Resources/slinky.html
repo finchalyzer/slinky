@@ -75,10 +75,15 @@
 		}
 
 		document.addEventListener("DOMContentLoaded", function() {
+
 			input = document.getElementById("url")
+
+			input.value =  window.location.hash.substr(1)
+
 			input.addEventListener("focus", onFocus, true)
 			input.addEventListener("blur", onBlur, true)
 			input.addEventListener("keypress", onKeypress, true)
+
 		})
 	</script>
 <body>

@@ -1,7 +1,7 @@
 import { convert } from "./convert"
 import { dialog, saveDialog, saveFile, exportAssets, getPreferences, setPreferences } from "./AppKit"
 import { slugify } from "./helpers"
-import { createPanel, getValue, setValue } from "./sidebar"
+import { updateSidebar, getValue } from "./sidebar"
 
 function exportHTML(context?: SketchContext) {
 
@@ -44,12 +44,14 @@ function exportHTML(context?: SketchContext) {
 }
 
 function toggleURL(context?: SketchContext){
+
    if(!context) return
 
    const sidebarEnabled = (getPreferences("sidebar") === "1" )
    setPreferences("sidebar", (sidebarEnabled) ? "0" : "1")
 
-   createPanel(context, "slinky_url", "view_coordinates", {width: 230, height: 38}, sidebarEnabled)
+   updateSidebar(context, sidebarEnabled)
+
 }
 
 
@@ -57,34 +59,19 @@ function onSelectionChanged(context?: SketchContext){
 
    if(!context) return
 
-   const command = context.command
+   const sidebarEnabled = (getPreferences("sidebar") === "1")
+   if(!sidebarEnabled) return
 
-   const sidebarEnabled = (getPreferences("sidebar") === "1" )
-   if(sidebarEnabled){
-      createPanel(context, "slinky_url", "view_coordinates", {width: 230, height: 38}, false)
-   } else return
+   const selection = context.actionContext.oldSelection
+   const url = getValue(context)
 
-   const oldSelection = context.actionContext.oldSelection
-   const newSelection = context.actionContext.document.selectedLayers().layers()
-
-   const oldURL = getValue(context, "slinky_url", "view_coordinates")
-   let newUrl: string = null
-
-   if(oldURL !== "multiple"){
-      oldSelection.forEach(layer =>{
-         command.setValue_forKey_onLayer(oldURL,'hrefURL', layer)
+   if(url && url !== "multiple"){
+      selection.forEach(layer =>{
+         context.command.setValue_forKey_onLayer(url,'hrefURL', layer)
       })
    }
 
-   newSelection.forEach(layer => {
-      const value = unescape(command.valueForKey_onLayer('hrefURL', layer))
-      if(!newUrl) newUrl = value
-      if(newUrl !== value) newUrl = "multiple"
-   })
-
-   if(!newUrl || newUrl === "null") newUrl = ""
-
-   setValue(context, "slinky_url", "view_coordinates", newUrl)
+   updateSidebar(context)
 
 }
 

@@ -1,8 +1,15 @@
 import { dialog } from "./Appkit"
 
-export function getValue(context: SketchContext, identifier: string, parentID: string){
+const sidebarID = "slinky_url"
+const sidebarParent = "view_coordinates"
+const sideberSize = {
+   width: 230,
+   height: 38
+}
 
-   const panels = getPanel(identifier, parentID)
+export function getValue(context: SketchContext){
+
+   const panels = getPanel(sidebarID, sidebarParent)
    if(!panels || !panels.panel) return
 
    const output = unescape(panels.panel.stringByEvaluatingJavaScriptFromString("getValue()"))
@@ -11,19 +18,10 @@ export function getValue(context: SketchContext, identifier: string, parentID: s
 
 }
 
-export function setValue(context: SketchContext, identifier: string, parentID: string, value: string){
+export function updateSidebar(context: SketchContext, remove?: boolean){
 
-   const panels = getPanel(identifier, parentID)
-   if(!panels || !panels.panel) return
-
-   panels.panel.stringByEvaluatingJavaScriptFromString(`setValue('${value}')`)
-
-}
-
-export function createPanel(context: SketchContext, identifier: string, parentID: string, size: {width: number, height: number}, remove: boolean){
-
-   const document= NSClassFromString("MSDocument").performSelector(NSSelectorFromString("currentDocument"))
-   const panels = getPanel(identifier, parentID)
+   const document = NSClassFromString("MSDocument").performSelector(NSSelectorFromString("currentDocument"))
+   const panels = getPanel(sidebarID, sidebarParent)
 
    if(remove){
 
@@ -32,30 +30,48 @@ export function createPanel(context: SketchContext, identifier: string, parentID
          panels.panel.removeFromSuperview()
 
          var parentFrame = panels.container.frame()
-         parentFrame.size.height = parentFrame.size.height - size.height
+         parentFrame.size.height = parentFrame.size.height - sideberSize.height
          panels.container.setFrame(parentFrame)
 
          document.inspectorController().selectionDidChangeTo(context.selection)
       }
 
-   } else
-   if(!panels.panel){
+      return
+
+   }
+
+   let url: string = null
+   const selection = document.selectedLayers().layers()
+
+   selection.forEach(layer => {
+      const value = unescape(context.command.valueForKey_onLayer('hrefURL', layer))
+      if(!url) url = value
+      if(url !== value) url = "multiple"
+   })
+
+   if(!url || url === "null") url = ""
+
+   if(panels.panel){
+
+      panels.panel.stringByEvaluatingJavaScriptFromString(`setValue('${url}')`)
+
+   } else {
 
       const panel = WebView.alloc().init()
       var childFrame = panel.frame()
-      childFrame.size.width = size.width
-      childFrame.size.height = size.height
+      childFrame.size.width = sideberSize.width
+      childFrame.size.height = sideberSize.height
 
       panel.setFrame(childFrame)
-      panel.identifier = identifier
+      panel.identifier = sidebarID
 
-      const url = unescape(context.plugin.urlForResourceNamed("slinky.html"))
-      panel.setMainFrameURL_(url)
+      const path = unescape(context.plugin.urlForResourceNamed("slinky.html")) + `#${url}`
+      panel.setMainFrameURL_(path)
 
       panels.container.addSubview(panel)
 
       var parentFrame = panels.container.frame()
-      parentFrame.size.height = parentFrame.size.height + size.height
+      parentFrame.size.height = parentFrame.size.height + sideberSize.height
       panels.container.setFrame(parentFrame)
 
       document.inspectorController().selectionDidChangeTo(context.selection)
