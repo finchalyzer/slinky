@@ -65,9 +65,15 @@ function onSelectionChanged(context?: SketchContext){
    const selection = context.actionContext.oldSelection
    const url = getValue(context)
 
-   if(url && url !== "multiple"){
-      selection.forEach(layer =>{
-         context.command.setValue_forKey_onLayer(url,'hrefURL', layer)
+   if(url !== "multiple"){
+      selection.forEach(layer => {
+
+         const value = unescape(context.command.valueForKey_onLayer('hrefURL', layer))
+
+         if(url.length === 0 && value.length === 0) return
+
+         context.command.setValue_forKey_onLayer(url, 'hrefURL', layer)
+
       })
    }
 

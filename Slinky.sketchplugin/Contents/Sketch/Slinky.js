@@ -1942,6 +1942,9 @@ function isEmail(string) {
     var pattern = new RegExp(/^[\w._-]+[+]?[\w._-]+@[\w.-]+\.[a-zA-Z]{2,14}$/);
     return pattern.test(string);
 }
+function formatLink(string) {
+    return (isEmail(string)) ? "mailto:" + string : (string.indexOf("http") === 0) ? string : "http://" + string;
+}
 function rgbaToHex(rgba) {
     function componentToHex(c) {
         var hex = c.toString(16);
@@ -2162,14 +2165,13 @@ function createTable(layers, size) {
                     depth: size.depth + 4
                 };
                 var cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize);
-                var isLink = (isURL(layers[cell].url));
                 result += indent(size.depth + 2, "<td style=\"" + cellStyle + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
-                if (isLink)
-                    result += indent(size.depth + 3, "<a href=\"" + ((isEmail(layers[cell].url)) ? "mailto:" : "") + layers[cell].url + "\" style=\"text-decoration:none;\" target=\"_blank\">");
+                if (layers[cell].url)
+                    result += indent(size.depth + 3, "<a href=\"" + formatLink(layers[cell].url) + "\" style=\"text-decoration:none;\">");
                 result += indent(size.depth + 3, "<div style=\"" + getCellStyle(layers[cell], childTableSize, { x: cellOffsetX, y: cellOffsetY }) + "\">");
                 result += cellContent;
                 result += indent(size.depth + 3, "</div>");
-                if (isLink)
+                if (layers[cell].url)
                     result += indent(size.depth + 3, "</a>");
                 result += indent(size.depth + 2, "</td>");
                 colspan = 1;
@@ -2211,8 +2213,8 @@ function getCellContent(layer, depth, size) {
                 style += attribute + ":" + textLayer.css[attribute] + ";";
             }
             var isLink = isURL(textLayer.text);
-            if (isLink) {
-                content_1 += indent(depth, "<a href=\"" + ((isEmail(textLayer.text)) ? "mailto:" : "") + textLayer.text + "\" style=\"" + linkStyle + style + "\" target=\"_blank\" style=\"" + style + "\">" + textLayer.text + "</a>");
+            if (isLink && !layer.url) {
+                content_1 += indent(depth, "<a href=\"" + formatLink(textLayer.text) + "\" style=\"" + linkStyle + style + "\" style=\"" + style + "\">" + textLayer.text + "</a>");
             }
             else {
                 content_1 += indent(depth, "<span style=\"" + style + "\">" + textLayer.text.replace("\n", "<br/>") + "</span>");
@@ -2330,10 +2332,11 @@ function sketchToLayers(layerGroup, offset, command) {
                 if ([MSLayerGroup, MSTextLayer, MSShapeGroup, MSBitmapLayer].indexOf(layer.class()) > -1) {
                     var layerCSS = getCSS(layer);
                     var borderWidth = (layerCSS["border"]) ? parseFloat(layerCSS["border"].split(" ")[0]) : 0;
+                    var url = unescape(command.valueForKey_onLayer("hrefURL", layer));
                     layers.unshift({
                         id: unescape(layer.objectID()),
                         title: unescape(layer.name()),
-                        url: unescape(command.valueForKey_onLayer("hrefURL", layer)),
+                        url: (url.length > 0 && url !== "null") ? url : null,
                         x1: Math.round(layer.frame().x() + ((offset) ? offset.x : 0)),
                         y1: Math.round(layer.frame().y() + ((offset) ? offset.y : 0)),
                         x2: Math.round(layer.frame().x() + layer.frame().width() + ((offset) ? offset.x : 0)),
@@ -2440,7 +2443,6 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
-//# sourceMappingURL=convert.js.map
 
 var pluginIdentifier = "com.sketchapp.slinky-plugin";
 function setPreferences(key, value) {
@@ -2649,8 +2651,11 @@ function onSelectionChanged(context) {
         return;
     var selection = context.actionContext.oldSelection;
     var url = getValue$2(context);
-    if (url && url !== "multiple") {
+    if (url !== "multiple") {
         selection.forEach(function (layer) {
+            var value = unescape(context.command.valueForKey_onLayer('hrefURL', layer));
+            if (url.length === 0 && value.length === 0)
+                return;
             context.command.setValue_forKey_onLayer(url, 'hrefURL', layer);
         });
     }
@@ -2659,3 +2664,4 @@ function onSelectionChanged(context) {
 var exportHTMLFunc = exportHTML();
 var toggleURLFunc = toggleURL();
 var selectionChangeFunc = onSelectionChanged();
+//# sourceMappingURL=Slinky.js.map

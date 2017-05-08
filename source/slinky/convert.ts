@@ -1,6 +1,6 @@
 import clone from "lodash-es/clone"
 
-import { rgbaToHex, NSrgbaToHex, isURL, isEmail, indent, expandCSS, contractCSS, isCircle } from "./helpers"
+import { rgbaToHex, NSrgbaToHex, isURL, formatLink, indent, expandCSS, contractCSS, isCircle } from "./helpers"
 import { template } from "./layout"
 
 export function convert(artboard: MSArtboardGroup, command: MSPluginCommand){
@@ -223,17 +223,15 @@ function createTable(layers: Layer[], size: TableSize){
             // Prepare cell's content
             const cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize)
 
-            const isLink = (isURL(layers[cell].url))
-
             result +=  indent(size.depth + 2, `<td style="${cellStyle}" colspan="${colspan}" rowspan="${rowspan}">`)
 
-            if(isLink) result += indent(size.depth + 3, `<a href="${(isEmail(layers[cell].url)) ? "mailto:" : ""}${layers[cell].url}" style="text-decoration:none;" target="_blank">`)
+            if(layers[cell].url) result += indent(size.depth + 3, `<a href="${formatLink(layers[cell].url)}" style="text-decoration:none;">`)
 
             result +=  indent(size.depth + 3, `<div style="${getCellStyle(layers[cell], childTableSize, {x: cellOffsetX, y: cellOffsetY})}">`)
             result +=  cellContent
             result +=  indent(size.depth + 3, `</div>`)
 
-            if(isLink) result += indent(size.depth + 3, `</a>`)
+            if(layers[cell].url) result += indent(size.depth + 3, `</a>`)
 
             result +=  indent(size.depth + 2, `</td>`)
 
@@ -297,8 +295,8 @@ function getCellContent(layer: Layer, depth: number, size: TableSize){
 
          const isLink = isURL(textLayer.text)
 
-         if(isLink){
-            content += indent(depth, `<a href="${(isEmail(textLayer.text)) ? "mailto:" : ""}${textLayer.text}" style="${linkStyle}${style}" target="_blank" style="${style}">${textLayer.text}</a>`)
+         if(isLink && !layer.url){
+            content += indent(depth, `<a href="${formatLink(textLayer.text)}" style="${linkStyle}${style}" style="${style}">${textLayer.text}</a>`)
          } else {
             content += indent(depth, `<span style="${style}">${textLayer.text.replace("\n","<br/>")}</span>`)
          }
@@ -474,10 +472,12 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}, 
 
                const borderWidth = (layerCSS["border"]) ? parseFloat(layerCSS["border"].split(" ")[0]) : 0
 
+               const url = unescape(command.valueForKey_onLayer("hrefURL", layer))
+
                layers.unshift({
                   id: unescape(layer.objectID()),
                   title: unescape(layer.name()),
-                  url: unescape(command.valueForKey_onLayer("hrefURL", layer)),
+                  url: (url.length > 0 && url !== "null") ? url : null,
                   x1: Math.round(layer.frame().x() + ((offset) ? offset.x : 0)),
                   y1: Math.round(layer.frame().y() + ((offset) ? offset.y : 0)),
                   x2: Math.round(layer.frame().x() + layer.frame().width()  + ((offset) ? offset.x : 0)),
