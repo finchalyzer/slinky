@@ -28,10 +28,8 @@ Slinky will automatically export image and icon assets, but you need to individu
 
 
 ### ⚠️ Links
-Link support is a bit hacky for now. You have ~~two~~ three options:
-   - Name your group/shape/layer as the link you want to use for it. Slinky will catch that and automatically convert that object to a link
-   - Slinky will automatically convert to links text layers containing a valid url or email
-   - Add the links afterwards in the code or with whatever tool you will use for sending the email
+Go to *Plugins -> Slinky -> Show/Hide Link URL* to show the Slinky link input in the inspector sidebar. Select the target layer and fill the *Link URL* field with the target link or e-mail.
+For now this does not work for selected text *(help needed)*.
 
 ### ⚠️ Fonts
 Slinky does not check the template for custom fonts *(yet)* and will export the template as it is. For the safest result across different email clients, we suggest you to use cross-platform fonts only:
