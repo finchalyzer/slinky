@@ -1,3 +1,38 @@
+const pluginIdentifier = "com.sketchapp.slinky-plugin"
+
+// Settings code thanks to Ashung: http://sketchplugins.com/d/134-best-strategy-for-locally-saving-user-data/6
+export function setPreferences(key: string, value: string) {
+
+   var settings = NSUserDefaults.standardUserDefaults()
+   var preferences = (!settings.dictionaryForKey(pluginIdentifier)) ? NSMutableDictionary.alloc().init() :  NSMutableDictionary.dictionaryWithDictionary(settings.dictionaryForKey(pluginIdentifier))
+
+   preferences.setObject_forKey(value, key)
+
+   settings.setObject_forKey(preferences, pluginIdentifier)
+   settings.synchronize()
+
+}
+
+export function getPreferences(key: string) {
+
+    var settings = NSUserDefaults.standardUserDefaults()
+
+    if (!settings.dictionaryForKey(pluginIdentifier)) {
+
+        var preferences = NSMutableDictionary.alloc().init()
+
+        preferences.setObject_forKey("0", "sidebar")
+
+        settings.setObject_forKey(preferences, pluginIdentifier)
+        settings.synchronize()
+        
+    }
+
+    return unescape(settings.dictionaryForKey(pluginIdentifier).objectForKey(key))
+
+}
+
+
 export function dialog(message: any, title?: string){
 
    const app = NSApplication.sharedApplication()

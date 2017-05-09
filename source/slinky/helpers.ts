@@ -18,6 +18,12 @@ export function isEmail(string: string) {
    return pattern.test(string)
 }
 
+export function formatLink(string: string){
+
+   return (isEmail(string)) ? `mailto:${string}` : (string.indexOf("http") === 0) ? string: `http://${string}`
+
+}
+
 export function rgbaToHex(rgba: {red(): number, green(): number, blue(): number, alpha(): number}){
 
    function componentToHex(c) {

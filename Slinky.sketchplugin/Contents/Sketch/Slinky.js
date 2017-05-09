@@ -1942,6 +1942,9 @@ function isEmail(string) {
     var pattern = new RegExp(/^[\w._-]+[+]?[\w._-]+@[\w.-]+\.[a-zA-Z]{2,14}$/);
     return pattern.test(string);
 }
+function formatLink(string) {
+    return (isEmail(string)) ? "mailto:" + string : (string.indexOf("http") === 0) ? string : "http://" + string;
+}
 function rgbaToHex(rgba) {
     function componentToHex(c) {
         var hex = c.toString(16);
@@ -2007,8 +2010,8 @@ function template(bgColor, content) {
 }
 //# sourceMappingURL=layout.js.map
 
-function convert(artboard) {
-    var data = sketchToLayers(artboard.layers());
+function convert(artboard, command) {
+    var data = sketchToLayers(artboard.layers(), null, command);
     var offset = {
         minX: artboard.frame().width(),
         maxX: 0,
@@ -2162,14 +2165,13 @@ function createTable(layers, size) {
                     depth: size.depth + 4
                 };
                 var cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize);
-                var isLink = (isURL(layers[cell].title));
                 result += indent(size.depth + 2, "<td style=\"" + cellStyle + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
-                if (isLink)
-                    result += indent(size.depth + 3, "<a href=\"" + layers[cell].title + "\" style=\"text-decoration:none;\" target=\"_blank\">");
+                if (layers[cell].url)
+                    result += indent(size.depth + 3, "<a href=\"" + formatLink(layers[cell].url) + "\" style=\"text-decoration:none;\">");
                 result += indent(size.depth + 3, "<div style=\"" + getCellStyle(layers[cell], childTableSize, { x: cellOffsetX, y: cellOffsetY }) + "\">");
                 result += cellContent;
                 result += indent(size.depth + 3, "</div>");
-                if (isLink)
+                if (layers[cell].url)
                     result += indent(size.depth + 3, "</a>");
                 result += indent(size.depth + 2, "</td>");
                 colspan = 1;
@@ -2211,8 +2213,8 @@ function getCellContent(layer, depth, size) {
                 style += attribute + ":" + textLayer.css[attribute] + ";";
             }
             var isLink = isURL(textLayer.text);
-            if (isLink) {
-                content_1 += indent(depth, "<a href=\"" + ((isEmail(textLayer.text)) ? "mailto:" : "") + textLayer.text + "\" style=\"" + linkStyle + style + "\" target=\"_blank\" style=\"" + style + "\">" + textLayer.text + "</a>");
+            if (isLink && !layer.url) {
+                content_1 += indent(depth, "<a href=\"" + formatLink(textLayer.text) + "\" style=\"" + linkStyle + style + "\" style=\"" + style + "\">" + textLayer.text + "</a>");
             }
             else {
                 content_1 += indent(depth, "<span style=\"" + style + "\">" + textLayer.text.replace("\n", "<br/>") + "</span>");
@@ -2309,19 +2311,19 @@ function appendLayers(layout, currentLayer) {
     if (!appended)
         layout.push(currentLayer);
 }
-function sketchToLayers(layerGroup, offset) {
+function sketchToLayers(layerGroup, offset, command) {
     var layers = [];
     var assets = [];
     layerGroup.forEach(function (layer, type) {
         if (layer.isVisible() && (!offset || !layer.parentGroup().isLayerExportable())) {
             if (layer.class() == MSSymbolInstance && !layer.isLayerExportable()) {
-                var children = sketchToLayers(layer.symbolMaster().layers(), { x: layer.frame().x() + ((offset) ? offset.x : 0), y: layer.frame().y() + ((offset) ? offset.y : 0) });
+                var children = sketchToLayers(layer.symbolMaster().layers(), { x: layer.frame().x() + ((offset) ? offset.x : 0), y: layer.frame().y() + ((offset) ? offset.y : 0) }, command);
                 layers = layers.concat(children.layers);
                 assets = assets.concat(children.assets);
             }
             else if (layer.class() == MSLayerGroup && !layer.isLayerExportable()) {
                 if (!offset) {
-                    var children = sketchToLayers(layer.children(), { x: layer.frame().x(), y: layer.frame().y() });
+                    var children = sketchToLayers(layer.children(), { x: layer.frame().x(), y: layer.frame().y() }, command);
                     layers = layers.concat(children.layers);
                     assets = assets.concat(children.assets);
                 }
@@ -2330,9 +2332,11 @@ function sketchToLayers(layerGroup, offset) {
                 if ([MSLayerGroup, MSTextLayer, MSShapeGroup, MSBitmapLayer].indexOf(layer.class()) > -1) {
                     var layerCSS = getCSS(layer);
                     var borderWidth = (layerCSS["border"]) ? parseFloat(layerCSS["border"].split(" ")[0]) : 0;
+                    var url = unescape(command.valueForKey_onLayer("hrefURL", layer));
                     layers.unshift({
                         id: unescape(layer.objectID()),
                         title: unescape(layer.name()),
+                        url: (url.length > 0 && url !== "null") ? url : null,
                         x1: Math.round(layer.frame().x() + ((offset) ? offset.x : 0)),
                         y1: Math.round(layer.frame().y() + ((offset) ? offset.y : 0)),
                         x2: Math.round(layer.frame().x() + layer.frame().width() + ((offset) ? offset.x : 0)),
@@ -2439,8 +2443,25 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
-//# sourceMappingURL=convert.js.map
 
+var pluginIdentifier = "com.sketchapp.slinky-plugin";
+function setPreferences(key, value) {
+    var settings = NSUserDefaults.standardUserDefaults();
+    var preferences = (!settings.dictionaryForKey(pluginIdentifier)) ? NSMutableDictionary.alloc().init() : NSMutableDictionary.dictionaryWithDictionary(settings.dictionaryForKey(pluginIdentifier));
+    preferences.setObject_forKey(value, key);
+    settings.setObject_forKey(preferences, pluginIdentifier);
+    settings.synchronize();
+}
+function getPreferences(key) {
+    var settings = NSUserDefaults.standardUserDefaults();
+    if (!settings.dictionaryForKey(pluginIdentifier)) {
+        var preferences = NSMutableDictionary.alloc().init();
+        preferences.setObject_forKey("0", "sidebar");
+        settings.setObject_forKey(preferences, pluginIdentifier);
+        settings.synchronize();
+    }
+    return unescape(settings.dictionaryForKey(pluginIdentifier).objectForKey(key));
+}
 function dialog(message, title) {
     var app = NSApplication.sharedApplication();
     if (typeof message !== "string")
@@ -2502,10 +2523,97 @@ function exportAssets(context, itemIds, outputFolder) {
 }
 //# sourceMappingURL=index.js.map
 
+var sidebarID = "slinky_url";
+var sidebarParent = "view_coordinates";
+var sideberSize = {
+    width: 230,
+    height: 38
+};
+function getValue$2(context) {
+    var panels = getPanel(sidebarID, sidebarParent);
+    if (!panels || !panels.panel)
+        return;
+    var output = unescape(panels.panel.stringByEvaluatingJavaScriptFromString("getValue()"));
+    return output;
+}
+function updateSidebar(context, remove) {
+    var document = NSClassFromString("MSDocument").performSelector(NSSelectorFromString("currentDocument"));
+    var panels = getPanel(sidebarID, sidebarParent);
+    if (remove) {
+        if (panels.panel) {
+            panels.panel.removeFromSuperview();
+            var parentFrame = panels.container.frame();
+            parentFrame.size.height = parentFrame.size.height - sideberSize.height;
+            panels.container.setFrame(parentFrame);
+            document.inspectorController().selectionDidChangeTo(context.selection);
+        }
+        return;
+    }
+    var url = null;
+    var selection = document.selectedLayers().layers();
+    selection.forEach(function (layer) {
+        var value = unescape(context.command.valueForKey_onLayer('hrefURL', layer));
+        if (!url)
+            url = value;
+        if (url !== value)
+            url = "multiple";
+    });
+    if (!url || url === "null")
+        url = "";
+    if (panels.panel) {
+        panels.panel.stringByEvaluatingJavaScriptFromString("setValue('" + url + "')");
+    }
+    else {
+        var panel = WebView.alloc().init();
+        var childFrame = panel.frame();
+        childFrame.size.width = sideberSize.width;
+        childFrame.size.height = sideberSize.height;
+        panel.setFrame(childFrame);
+        panel.identifier = sidebarID;
+        var path = unescape(context.plugin.urlForResourceNamed("slinky.html")) + ("#" + url);
+        panel.setMainFrameURL_(path);
+        panels.container.addSubview(panel);
+        var parentFrame = panels.container.frame();
+        parentFrame.size.height = parentFrame.size.height + sideberSize.height;
+        panels.container.setFrame(parentFrame);
+        document.inspectorController().selectionDidChangeTo(context.selection);
+    }
+}
+function getPanel(identifier, parentID) {
+    var document = NSClassFromString("MSDocument").performSelector(NSSelectorFromString("currentDocument"));
+    var contentView = document.inspectorController().view();
+    if (!contentView)
+        return null;
+    var container = viewSearch(contentView, parentID);
+    var panel = viewSearch(contentView, identifier);
+    return {
+        container: container,
+        panel: panel
+    };
+}
+function viewSearch(nsview, identifier) {
+    var found = null;
+    if (nsview.subviews().length > 0) {
+        nsview.subviews().forEach(function (subview) {
+            if (found)
+                return;
+            if (subview.identifier() == identifier) {
+                found = subview;
+            }
+            else {
+                found = viewSearch(subview, identifier);
+            }
+        });
+    }
+    return found;
+}
+//# sourceMappingURL=sidebar.js.map
+
 function exportHTML(context) {
     if (!context)
         return;
     var artboard = context.document.currentPage().currentArtboard();
+    var command = context.command;
     if (!artboard) {
         dialog("Select an artboard first!", "⚠️ Slinky");
         return;
@@ -2516,7 +2624,7 @@ function exportHTML(context) {
     });
     if (!exportPath)
         return;
-    var content = convert(artboard);
+    var content = convert(artboard, command);
     var result = saveFile(content.table, exportPath);
     exportAssets(context, content.assets, exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/");
     if (result) {
@@ -2528,5 +2636,32 @@ function exportHTML(context) {
         dialog("Could not export the template :/ \n\nPlease, report an issue at\nhttps://github.com/finchalyzer/slinky", "⚠️ Slinky");
     }
 }
-var defaultFunc = exportHTML();
+function toggleURL(context) {
+    if (!context)
+        return;
+    var sidebarEnabled = (getPreferences("sidebar") === "1");
+    setPreferences("sidebar", (sidebarEnabled) ? "0" : "1");
+    updateSidebar(context, sidebarEnabled);
+}
+function onSelectionChanged(context) {
+    if (!context)
+        return;
+    var sidebarEnabled = (getPreferences("sidebar") === "1");
+    if (!sidebarEnabled)
+        return;
+    var selection = context.actionContext.oldSelection;
+    var url = getValue$2(context);
+    if (url !== "multiple") {
+        selection.forEach(function (layer) {
+            var value = unescape(context.command.valueForKey_onLayer('hrefURL', layer));
+            if (url.length === 0 && value.length === 0)
+                return;
+            context.command.setValue_forKey_onLayer(url, 'hrefURL', layer);
+        });
+    }
+    updateSidebar(context);
+}
+var exportHTMLFunc = exportHTML();
+var toggleURLFunc = toggleURL();
+var selectionChangeFunc = onSelectionChanged();
 //# sourceMappingURL=Slinky.js.map

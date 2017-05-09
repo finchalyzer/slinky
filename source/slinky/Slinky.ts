@@ -1,12 +1,14 @@
 import { convert } from "./convert"
-import { dialog, saveDialog, saveFile, exportAssets } from "./AppKit"
+import { dialog, saveDialog, saveFile, exportAssets, getPreferences, setPreferences } from "./AppKit"
 import { slugify } from "./helpers"
+import { updateSidebar, getValue } from "./sidebar"
 
 function exportHTML(context?: SketchContext) {
 
    if(!context) return
 
    const artboard = context.document.currentPage().currentArtboard()
+   const command = context.command
 
    if(!artboard){
       dialog("Select an artboard first!", "⚠️ Slinky")
@@ -20,7 +22,7 @@ function exportHTML(context?: SketchContext) {
 
    if(!exportPath) return
 
-   const content = convert(artboard)
+   const content = convert(artboard, command)
 
    const result = saveFile(content.table, exportPath)
 
@@ -41,4 +43,44 @@ function exportHTML(context?: SketchContext) {
 
 }
 
-const defaultFunc = exportHTML()
+function toggleURL(context?: SketchContext){
+
+   if(!context) return
+
+   const sidebarEnabled = (getPreferences("sidebar") === "1" )
+   setPreferences("sidebar", (sidebarEnabled) ? "0" : "1")
+
+   updateSidebar(context, sidebarEnabled)
+
+}
+
+
+function onSelectionChanged(context?: SketchContext){
+
+   if(!context) return
+
+   const sidebarEnabled = (getPreferences("sidebar") === "1")
+   if(!sidebarEnabled) return
+
+   const selection = context.actionContext.oldSelection
+   const url = getValue(context)
+
+   if(url !== "multiple"){
+      selection.forEach(layer => {
+
+         const value = unescape(context.command.valueForKey_onLayer('hrefURL', layer))
+
+         if(url.length === 0 && value.length === 0) return
+
+         context.command.setValue_forKey_onLayer(url, 'hrefURL', layer)
+
+      })
+   }
+
+   updateSidebar(context)
+
+}
+
+const exportHTMLFunc = exportHTML()
+const toggleURLFunc = toggleURL()
+const selectionChangeFunc = onSelectionChanged()

@@ -94,6 +94,14 @@ interface MSDocument{
    fileURL(): string
    saveDocument(parameters: any): void
    isDocumentEdited(): boolean
+   selectedLayers():{
+      layers(): MSLayer[]
+   }
+}
+
+interface MSPluginCommand{
+   setValue_forKey_onLayer(value: string, key: string, layer: MSLayer): void
+   valueForKey_onLayer(key: string, layer: MSLayer): string
 }
 
 interface SketchContext{
@@ -101,8 +109,15 @@ interface SketchContext{
    scriptPath: string
    scriptURL: string
    api: any
-   command: any
+   command: MSPluginCommand
    selection: MSArtboardGroup
+   plugin: {
+      urlForResourceNamed(name: string): string
+   }
+   actionContext:{
+      oldSelection: MSLayer[]
+      document: MSDocument
+   }
 }
 
 
