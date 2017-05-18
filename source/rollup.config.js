@@ -1,5 +1,6 @@
 import typescript from "rollup-plugin-typescript"
 import resolve from "rollup-plugin-node-resolve"
+import cleanup from "rollup-plugin-cleanup"
 
 export default {
    entry: "./slinky/Slinky.ts",
@@ -8,6 +9,7 @@ export default {
    sourceMap: false,
    plugins: [
       typescript(),
-      resolve()
+      resolve(),
+      cleanup()
    ]
 }

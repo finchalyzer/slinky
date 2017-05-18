@@ -38,7 +38,7 @@ export function convert(artboard: MSArtboardGroup, command: MSPluginCommand){
       depth: 3
    })
 
-   const bodyBackground = rgbaToHex(artboard.backgroundColorGeneric())
+   const bodyBackground = rgbaToHex(artboard.backgroundColor())
 
    return {
       table: template(bodyBackground, table),

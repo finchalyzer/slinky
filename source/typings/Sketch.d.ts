@@ -71,7 +71,7 @@ interface MSArtboardGroup{
    objectID(): string
    layers(): MSLayer[]
    name(): string
-   backgroundColorGeneric(): {
+   backgroundColor(): {
       red(): number,
       green(): number,
       blue(): number,
