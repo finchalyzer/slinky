@@ -3,7 +3,7 @@ import clone from "lodash-es/clone"
 import { rgbaToHex, NSrgbaToHex, isURL, formatLink, indent, expandCSS, contractCSS, isCircle } from "./helpers"
 import { template } from "./layout"
 
-export function convert(artboard: MSArtboardGroup, command: MSPluginCommand){
+export function convert(artboard: MSArtboardGroup, command: MSPluginCommand, sketchVersion: number){
 
    // Get all visible layers from the artboard
    const data = sketchToLayers(artboard.layers(), null, command)
@@ -38,10 +38,11 @@ export function convert(artboard: MSArtboardGroup, command: MSPluginCommand){
       depth: 3
    })
 
-   const bodyBackground = rgbaToHex(artboard.backgroundColor())
+
+   const bodyBackground = (sketchVersion < 44) ? artboard.backgroundColorGeneric() : artboard.backgroundColor()
 
    return {
-      table: template(bodyBackground, table),
+      table: template(rgbaToHex(bodyBackground), table),
       assets: data.assets
    }
 

@@ -1122,12 +1122,14 @@ function isCircle(layer) {
         return false;
     }
 }
+//# sourceMappingURL=helpers.js.map
 
 function template(bgColor, content) {
     return "<!doctype html>\n<html style=\"margin: 0; padding: 0px;\">\n<head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\">\n    <!--[if !mso]><!-- -->\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n    <!--<![endif]-->\n    <style type=\"text/css\">\n        body{\n            margin:0;\n            padding:0;\n            line-height: 1;\n        }\n        img{\n            border:0 none;\n            height:auto;\n            line-height:100%;\n            outline:none;\n            text-decoration:none;\n            display:block;\n        }\n            a img{\n            border:0 none;\n        }\n        table, td{\n            border-collapse: collapse;\n            border-spacing: 0;\n            padding:0px;\n        }\n        #bodyTable{\n            height:100% !important;\n            margin:0;\n            padding:0;\n            width:100% !important;\n        }\n    </style>\n</head>\n<body bgcolor=\"" + bgColor + "\" style=\"padding:0px;margin:0px;\">\n    <table id=\"bodyTable\" bgcolor=\"" + bgColor + "\" style=\"width: 100%; height: 100%; background-color: " + bgColor + "; margin: 0; padding:0;\">\n        <tr>\n            <td style=\"text-align: center;\" valign=\"top\">\n    " + content + "            </td>\n        </tr>\n    </table>\n</body>\n</html>";
 }
+//# sourceMappingURL=layout.js.map
 
-function convert(artboard, command) {
+function convert(artboard, command, sketchVersion) {
     var data = sketchToLayers(artboard.layers(), null, command);
     var offset = {
         minX: artboard.frame().width(),
@@ -1152,9 +1154,9 @@ function convert(artboard, command) {
         offsetY: 0,
         depth: 3
     });
-    var bodyBackground = rgbaToHex(artboard.backgroundColor());
+    var bodyBackground = (sketchVersion < 44) ? artboard.backgroundColorGeneric() : artboard.backgroundColor();
     return {
-        table: template(bodyBackground, table),
+        table: template(rgbaToHex(bodyBackground), table),
         assets: data.assets
     };
 }
@@ -1638,6 +1640,7 @@ function exportAssets(context, itemIds, outputFolder) {
     task.standardError = errPipe;
     task.launch();
 }
+//# sourceMappingURL=index.js.map
 
 var sidebarID = "slinky_url";
 var sidebarParent = "view_coordinates";
@@ -1723,12 +1726,14 @@ function viewSearch(nsview, identifier) {
     }
     return found;
 }
+//# sourceMappingURL=sidebar.js.map
 
 function exportHTML(context) {
     if (!context)
         return;
     var artboard = context.document.currentPage().currentArtboard();
     var command = context.command;
+    var sketchVersion = parseFloat(context.api().version);
     if (!artboard) {
         dialog("Select an artboard first!", "⚠️ Slinky");
         return;
@@ -1739,7 +1744,7 @@ function exportHTML(context) {
     });
     if (!exportPath)
         return;
-    var content = convert(artboard, command);
+    var content = convert(artboard, command, sketchVersion);
     var result = saveFile(content.table, exportPath);
     exportAssets(context, content.assets, exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/");
     if (result) {
@@ -1779,3 +1784,4 @@ function onSelectionChanged(context) {
 var exportHTMLFunc = exportHTML();
 var toggleURLFunc = toggleURL();
 var selectionChangeFunc = onSelectionChanged();
+//# sourceMappingURL=Slinky.js.map

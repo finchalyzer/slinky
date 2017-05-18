@@ -10,6 +10,8 @@ function exportHTML(context?: SketchContext) {
    const artboard = context.document.currentPage().currentArtboard()
    const command = context.command
 
+   const sketchVersion = parseFloat(context.api().version)
+
    if(!artboard){
       dialog("Select an artboard first!", "⚠️ Slinky")
       return
@@ -22,7 +24,7 @@ function exportHTML(context?: SketchContext) {
 
    if(!exportPath) return
 
-   const content = convert(artboard, command)
+   const content = convert(artboard, command, sketchVersion)
 
    const result = saveFile(content.table, exportPath)
 
