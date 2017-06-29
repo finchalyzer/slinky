@@ -43,12 +43,23 @@ interface MSLayer{
       point(): {x: number, y: number}
    }
    style():{
-      fill():{
-         color(): any
-      }
+      fills(): MSStyleFill
+   }
+   attributedStringValue(): any
+}
+
+interface MSStyleFill{
+   firstObject(): MSStyleFill
+   color(): {
+      red(): number,
+      green(): number,
+      blue(): number,
+      alpha(): number
    }
 }
 
+
+declare var NSMakeRange: any
 declare var MSTextLayer: MSLayer
 declare var MSLayerGroup: MSLayer
 declare var MSShapeGroup: MSLayer

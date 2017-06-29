@@ -1,13 +1,14 @@
 {
    "name" : "Slinky",
    "identifier" : "com.sketchapp.slinky-plugin",
-   "version" : "0.1.3",
+   "version" : "0.1.4",
    "description" : "Export HTML email templates from Sketch",
    "authorEmail" : "human@finch.io",
    "author" : "finchalyzer",
    "homepage" : "https://github.com/finchalyzer/slinky",
    "disableCocoaScriptPreprocessor": true,
    "icon" : "icons/slinky.png",
+   "appcast": "https://raw.githubusercontent.com/finchalyzer/slinky/master/appcast.xml",
    "commands" : [
       {
          "script" : "Slinky.js",

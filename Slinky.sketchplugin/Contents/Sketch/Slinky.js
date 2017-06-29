@@ -1476,48 +1476,43 @@ function sketchToLayers(layerGroup, offset, command) {
     return { layers: layers, assets: assets };
 }
 function splitText(layer) {
-    var textStorage = layer.createTextStorage();
-    var attributeRuns = textStorage.attributeRuns();
-    var attributeRunsCount = attributeRuns.count();
     var fontWeights = ["thin", "extralight", "light", "normal", "medium", "semibold", "bold", "extrabold", "black"];
     var fontStyles = ["italic", "oblique"];
-    var fillColor = (layer.style().fill()) ? layer.style().fill().color() : null;
+    var hasFill = (layer.style().fills().firstObject()) ? true : null;
     var textElements = [];
-    for (var i = 0; i < attributeRunsCount; i++) {
-        var obj = attributeRuns.objectAtIndex(i);
-        var textAttributes = {
-            text: "",
-            css: {}
-        };
-        textAttributes.text = unescape(obj.string());
-        var font = obj.font();
-        var fontFamily = unescape(font.familyName());
-        var fontName = unescape(font.displayName());
+    var attributes = layer.attributedStringValue().treeAsDictionary().attributes;
+    attributes.forEach(function (attribute) {
+        var font = attribute.NSFont;
+        var fontFamily = unescape(font.family);
+        var fontName = unescape(font.name);
         var fontVariants = fontName.substr(fontFamily.length + 1).split(" ");
         var fontWeight = fontVariants.filter(function (variant) { return fontWeights.indexOf(variant.toLowerCase()) > -1; });
-        if (fontWeight.length == 1)
-            textAttributes.css["font-weight"] = (fontWeights.indexOf(fontWeight[0].toLowerCase()) + 1) * 100;
         var fontStyle = fontVariants.filter(function (variant) { return fontStyles.indexOf(variant.toLowerCase()) > -1; });
-        if (fontStyle.length == 1)
-            textAttributes.css["font-style"] = fontStyle[0].toLowerCase();
-        if (obj.attribute_atIndex_effectiveRange_("NSUnderline", 0, null)) {
-            textAttributes.css["text-decoration"] = "underline";
+        var fontColor = layer.attributedStringValue().attribute_atIndex_effectiveRange_("NSColor", attribute.location, null);
+        var css = {
+            "font-weight": (fontWeight.length == 1) ? (fontWeights.indexOf(fontWeight[0].toLowerCase()) + 1) * 100 + "" : null,
+            "font-style": (fontStyle.length == 1) ? fontStyle[0].toLowerCase() : null,
+            "text-decoration": (layer.attributedStringValue().attribute_atIndex_effectiveRange_("NSUnderline", attribute.location, null)) ? "underline" : null,
+            "font-family": "'" + fontFamily + "'",
+            "font-size": font.attributes.NSFontSizeAttribute + 'px',
+            "color": (!hasFill && fontColor) ? NSrgbaToHex(fontColor) : null,
+        };
+        for (var propName in css) {
+            if (css[propName] === null || css[propName] === undefined) {
+                delete css[propName];
+            }
         }
-        textAttributes.css["font-family"] = "'" + fontFamily + "'";
-        textAttributes.css["font-size"] = font.pointSize() + 'px';
-        if (!fillColor) {
-            var color = obj.foregroundColor().colorUsingColorSpaceName(NSCalibratedRGBColorSpace);
-            textAttributes.css["color"] = NSrgbaToHex(color);
-            textAttributes.css["opacity"] = color.alphaComponent();
-        }
-        textElements.push(textAttributes);
-    }
+        textElements.push({
+            text: unescape(attribute.text),
+            css: css
+        });
+    });
     return textElements;
 }
 function getCSS(layer) {
     var properties = parseCSSAttributes(layer.CSSAttributes().slice(1));
-    if (layer.style().fill()) {
-        properties["color"] = rgbaToHex(layer.style().fill().color());
+    if (layer.style().fills().firstObject()) {
+        properties["color"] = rgbaToHex(layer.style().fills().firstObject().color());
     }
     if (layer.class() === MSTextLayer) {
         var textAlignment = [
