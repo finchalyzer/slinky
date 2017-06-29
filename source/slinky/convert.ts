@@ -508,59 +508,52 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}, 
 
 function splitText(layer: MSLayer){
 
-   const textStorage = layer.createTextStorage()
-   const attributeRuns = textStorage.attributeRuns()
-   const attributeRunsCount = attributeRuns.count()
-
    const fontWeights = ["thin", "extralight", "light", "normal", "medium", "semibold", "bold", "extrabold", "black"]
    const fontStyles = ["italic", "oblique"]
 
-   const fillColor = (layer.style().fill()) ? layer.style().fill().color() : null
+   const hasFill = (layer.style().fills().firstObject()) ? true : null
 
    var textElements: {
       text: string,
       css: any
    }[] = []
 
-   for(var i = 0; i < attributeRunsCount; i++) {
+   const attributes = layer.attributedStringValue().treeAsDictionary().attributes
 
-      var obj = attributeRuns.objectAtIndex(i)
+   attributes.forEach((attribute)=>{
 
-      var textAttributes = {
-         text: "",
-         css: {}
-      }
+      const font = attribute.NSFont
 
-      textAttributes.text = unescape(obj.string())
-
-      var font = obj.font()
-
-      const fontFamily = unescape(font.familyName())
-      const fontName = unescape(font.displayName())
+      const fontFamily = unescape(font.family)
+      const fontName = unescape(font.name)
       const fontVariants = fontName.substr(fontFamily.length + 1).split(" ")
 
       const fontWeight = fontVariants.filter(variant => fontWeights.indexOf(variant.toLowerCase()) > -1)
-      if(fontWeight.length == 1) textAttributes.css["font-weight"] = (fontWeights.indexOf(fontWeight[0].toLowerCase()) + 1) * 100
-
       const fontStyle = fontVariants.filter(variant => fontStyles.indexOf(variant.toLowerCase()) > -1)
-      if(fontStyle.length == 1) textAttributes.css["font-style"] = fontStyle[0].toLowerCase()
 
-      if(obj.attribute_atIndex_effectiveRange_("NSUnderline", 0, null)){
-         textAttributes.css["text-decoration"] = "underline"
+      const fontColor = layer.attributedStringValue().attribute_atIndex_effectiveRange_("NSColor", attribute.location, null)
+
+      let css = {
+         "font-weight": (fontWeight.length == 1) ? (fontWeights.indexOf(fontWeight[0].toLowerCase()) + 1) * 100 + "" : null,
+         "font-style": (fontStyle.length == 1) ? fontStyle[0].toLowerCase() : null,
+         "text-decoration": (layer.attributedStringValue().attribute_atIndex_effectiveRange_("NSUnderline", attribute.location, null)) ? "underline" : null,
+         "font-family": `'${fontFamily}'`,
+         "font-size": font.attributes.NSFontSizeAttribute + 'px',
+         "color": (!hasFill && fontColor) ? NSrgbaToHex(fontColor) : null,
       }
 
-      textAttributes.css["font-family"] = `'${fontFamily}'`
-      textAttributes.css["font-size"] = font.pointSize() + 'px'
-
-      if(!fillColor){
-         const color = obj.foregroundColor().colorUsingColorSpaceName(NSCalibratedRGBColorSpace)
-         textAttributes.css["color"] = NSrgbaToHex(color)
-         textAttributes.css["opacity"] = color.alphaComponent()
+      for (var propName in css) {
+         if (css[propName] === null || css[propName] === undefined) {
+            delete css[propName]
+         }
       }
 
-      textElements.push(textAttributes)
+      textElements.push({
+         text: unescape(attribute.text),
+         css: css
+      })
 
-   }
+   })
 
    return textElements
 
@@ -570,8 +563,8 @@ function getCSS(layer: MSLayer){
 
    var properties = parseCSSAttributes(layer.CSSAttributes().slice(1))
 
-   if(layer.style().fill()){
-      properties["color"] = rgbaToHex(layer.style().fill().color())
+   if(layer.style().fills().firstObject()){
+      properties["color"] = rgbaToHex(layer.style().fills().firstObject().color())
    }
 
    if(layer.class() === MSTextLayer){
