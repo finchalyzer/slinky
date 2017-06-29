@@ -1,5 +1,5 @@
 # Slinky 💎 ✉️
-💾 [Download](https://github.com/finchalyzer/slinky/releases/download/v0.1.1/Slinky.zip) | 💎 [One-click Install via Sketchpacks](https://sketchpacks.com/finchalyzer/slinky/install) | 🐞 [Report an issue](https://github.com/finchalyzer/slinky/issues/new) | ⭐️ [Share love](https://github.com/finchalyzer/slinky/stargazers)
+💾 [Download](https://github.com/finchalyzer/slinky/releases/download/v0.1.4/Slinky.zip) | 💎 [One-click Install via Sketchpacks](https://sketchpacks.com/finchalyzer/slinky/install) | 🐞 [Report an issue](https://github.com/finchalyzer/slinky/issues/new) | ⭐️ [Share love](https://github.com/finchalyzer/slinky/stargazers)
 --- | --- | --- | ---
 ## Export your Sketch designs as HTML email templates
 
