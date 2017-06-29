@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+   <channel>
+      <title>Slinky</title>
+      <link>https://raw.githubusercontent.com/finchalyzer/slinky/master/appcast.xml</link>
+      <description>Export HTML email templates from Sketch artboards</description>
+      <language>en</language>
+      <item>
+         <title>Version 0.1.4</title>
+         <description>
+            <![CDATA[
+            <ul>
+               <li>Sketch 45 support</li>
+            </ul>
+            ]]>
+         </description>
+         <pubDate>Thu, 29 Jun 2017 12:00:00 +0000</pubDate>
+         <enclosure url="https://github.com/finchalyzer/slinky/releases/download/v0.1.4/Slinky.zip" sparkle:version="0.1.4" length="0" type="application/octet-stream"/>
+      </item>
+   </channel>
+</rss>
