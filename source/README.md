@@ -1,5 +1,5 @@
 # Slinky source
-## v0.1.0
+## v0.1.4
 
 Slinky plugin is written in [Typescript](https://www.typescriptlang.org/).
 To compile the code, you need to install [Node.js](https://nodejs.org/en/download/).

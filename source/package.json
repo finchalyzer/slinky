@@ -1,6 +1,6 @@
 {
   "name": "slinky-sketch",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Export your Sketch designs as HTML email templates",
   "main": "slinky/Slinky.ts",
   "scripts": {
