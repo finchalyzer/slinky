@@ -1557,6 +1557,7 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
+//# sourceMappingURL=convert.js.map
 
 var pluginIdentifier = "com.sketchapp.slinky-plugin";
 function setPreferences(key, value) {
@@ -1610,11 +1611,10 @@ function exportAssets(context, itemIds, outputFolder) {
         sketchFile = decodeURIComponent(sketchFile.toString().replace("file://", ""));
     }
     context.document.saveDocument(null);
-    var command = "/bin/bash";
     var args = [
         "-c",
-        "mkdir -p " + outputFolder + " && "
-            + sketchtool + ' export ' + 'slices'
+        "-l",
+        sketchtool + ' export ' + 'slices'
             + ' "' + sketchFile + '"'
             + ' --scales=2'
             + ' --formats=png'
@@ -1626,16 +1626,28 @@ function exportAssets(context, itemIds, outputFolder) {
             + ' --items="' + itemIds.join(",") + '"'
             + ' --output="' + outputFolder.replace("%20", " ") + '"'
     ];
+    return runCommand("/bin/mkdir", ["-p", outputFolder])
+        && runCommand("/bin/bash", args);
+}
+function runCommand(command, args) {
+    log("Run Command: " + command + " " + args.join(" ") + "");
     var task = NSTask.alloc().init();
     var pipe = NSPipe.pipe();
     var errPipe = NSPipe.pipe();
-    task.launchPath = command;
+    task.setLaunchPath_(command);
     task.arguments = args;
     task.standardOutput = pipe;
     task.standardError = errPipe;
-    task.launch();
+    try {
+        task.launch();
+        task.waitUntilExit();
+        return (task.terminationStatus() == 0);
+    }
+    catch (e) {
+        log("❌ Cannot run command: " + e);
+        return false;
+    }
 }
-//# sourceMappingURL=index.js.map
 
 var sidebarID = "slinky_url";
 var sidebarParent = "view_coordinates";
@@ -1741,8 +1753,8 @@ function exportHTML(context) {
         return;
     var content = convert(artboard, command, sketchVersion);
     var result = saveFile(content.table, exportPath);
-    exportAssets(context, content.assets, exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/");
-    if (result) {
+    var isAssetsExported = exportAssets(context, content.assets, exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/");
+    if (result && isAssetsExported) {
         var workspace = NSWorkspace.sharedWorkspace();
         var updateUrl = NSURL.URLWithString("file://" + exportPath);
         workspace.openURL(updateUrl);

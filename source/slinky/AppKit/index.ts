@@ -25,7 +25,7 @@ export function getPreferences(key: string) {
 
         settings.setObject_forKey(preferences, pluginIdentifier)
         settings.synchronize()
-        
+
     }
 
     return unescape(settings.dictionaryForKey(pluginIdentifier).objectForKey(key))
@@ -86,11 +86,10 @@ export function exportAssets(context: SketchContext, itemIds: string[], outputFo
 
    context.document.saveDocument(null)
 
-   const command = "/bin/bash"
    const args = [
       "-c",
-      "mkdir -p " + outputFolder + " && "
-      + sketchtool + ' export ' + 'slices'
+      "-l",
+      sketchtool + ' export ' + 'slices'
       + ' "' + sketchFile + '"'
       + ' --scales=2'
       + ' --formats=png'
@@ -102,14 +101,25 @@ export function exportAssets(context: SketchContext, itemIds: string[], outputFo
       + ' --items="' + itemIds.join(",") + '"'
       + ' --output="' + outputFolder.replace("%20", " ") + '"'
    ]
+   return runCommand("/bin/mkdir", ["-p", outputFolder])
+      && runCommand("/bin/bash", args)
+}
 
-   var task = NSTask.alloc().init()
-   var pipe = NSPipe.pipe()
-   var errPipe = NSPipe.pipe()
-   task.launchPath = command
-   task.arguments = args
-   task.standardOutput = pipe
-   task.standardError = errPipe
-   task.launch()
-
+function runCommand(command: string, args: string[]) {
+  log("Run Command: " + command + " " + args.join(" ") + "")
+  var task = NSTask.alloc().init()
+  var pipe = NSPipe.pipe()
+  var errPipe = NSPipe.pipe()
+  task.setLaunchPath_(command)
+  task.arguments = args
+  task.standardOutput = pipe
+  task.standardError = errPipe
+  try {
+    task.launch()
+    task.waitUntilExit()
+    return (task.terminationStatus() == 0)
+  } catch (e) {
+    log("❌ Cannot run command: " + e)
+    return false
+  }
 }

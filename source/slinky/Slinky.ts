@@ -29,13 +29,13 @@ function exportHTML(context?: SketchContext) {
    const result = saveFile(content.table, exportPath)
 
    // Export assets
-   exportAssets(
+   const isAssetsExported = exportAssets(
       context,
       content.assets,
       exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/"
    )
 
-   if(result){
+   if(result && isAssetsExported){
       const workspace = NSWorkspace.sharedWorkspace()
       const updateUrl = NSURL.URLWithString(`file://${exportPath}`)
       workspace.openURL(updateUrl)
