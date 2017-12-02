@@ -1605,7 +1605,7 @@ function exportAssets(context, itemIds, outputFolder) {
     var sketchFile = context.document.fileURL();
     if (!sketchFile || context.document.isDocumentEdited()) {
         NSApplication.sharedApplication().displayDialog_withTitle("To export the assets, save the Sketch file first!", "⚠️ Slinky");
-        return;
+        return true;
     }
     else {
         sketchFile = decodeURIComponent(sketchFile.toString().replace("file://", ""));
@@ -1648,6 +1648,7 @@ function runCommand(command, args) {
         return false;
     }
 }
+//# sourceMappingURL=index.js.map
 
 var sidebarID = "slinky_url";
 var sidebarParent = "view_coordinates";
@@ -1781,7 +1782,7 @@ function onSelectionChanged(context) {
     if (url !== "multiple") {
         selection.forEach(function (layer) {
             var value = unescape(context.command.valueForKey_onLayer('hrefURL', layer));
-            if (url.length === 0 && value.length === 0)
+            if (!url || (url.length === 0 && value.length === 0))
                 return;
             context.command.setValue_forKey_onLayer(url, 'hrefURL', layer);
         });
@@ -1791,4 +1792,3 @@ function onSelectionChanged(context) {
 var exportHTMLFunc = exportHTML();
 var toggleURLFunc = toggleURL();
 var selectionChangeFunc = onSelectionChanged();
-//# sourceMappingURL=Slinky.js.map

@@ -79,7 +79,7 @@ export function exportAssets(context: SketchContext, itemIds: string[], outputFo
 
    if(!sketchFile || context.document.isDocumentEdited()){
       NSApplication.sharedApplication().displayDialog_withTitle("To export the assets, save the Sketch file first!", "⚠️ Slinky")
-      return
+      return true
    } else {
       sketchFile = decodeURIComponent(sketchFile.toString().replace("file://", ""))
    }
