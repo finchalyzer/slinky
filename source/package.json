@@ -21,12 +21,12 @@
   },
   "homepage": "https://github.com/finchalyzer/slinky",
   "devDependencies": {
-    "@types/lodash-es": "^4.14.5",
+    "@types/lodash-es": "^4.17.0",
     "lodash-es": "^4.17.4",
-    "rollup": "^0.41.6",
-    "rollup-plugin-cleanup": "^1.0.0",
+    "rollup": "^0.52.0",
+    "rollup-plugin-cleanup": "^2.0.0",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-typescript": "^0.8.1",
-    "rollup-watch": "^3.2.2"
+    "rollup-watch": "^4.3.1"
   }
 }

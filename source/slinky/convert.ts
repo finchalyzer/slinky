@@ -136,7 +136,6 @@ function createTable(layers: Layer[], size: TableSize){
       result += indent(size.depth + 1, `<tr>`)
 
       let colspan = 1
-      let empty = false
 
       row.forEach((cell, colIndex) => {
 
@@ -153,10 +152,8 @@ function createTable(layers: Layer[], size: TableSize){
             if(colIndex == tableGrid[0].length - 1 || (typeof tableGrid[rowIndex][colIndex + 1] === "number" || tableGrid[rowIndex][colIndex + 1] === "rowspanned" )){
                result += indent(size.depth + 2, `<td colspan="${colspan}" style="width:${cellWidth}px;height:${table.rows[rowIndex + 1] - table.rows[rowIndex]}px">&shy;</td>`)
                colspan = 1
-               empty = false
             } else {
                colspan ++
-               empty = true
             }
          } else
 

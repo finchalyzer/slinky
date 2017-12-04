@@ -1,7 +1,7 @@
 {
    "name" : "Slinky",
    "identifier" : "com.sketchapp.slinky-plugin",
-   "version" : "0.1.4",
+   "version" : "0.1.5",
    "description" : "Export HTML email templates from Sketch",
    "authorEmail" : "human@finch.io",
    "author" : "finchalyzer",
