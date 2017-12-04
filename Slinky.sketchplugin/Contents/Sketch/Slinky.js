@@ -1122,12 +1122,10 @@ function isCircle(layer) {
         return false;
     }
 }
-//# sourceMappingURL=helpers.js.map
 
 function template(bgColor, content) {
     return "<!doctype html>\n<html style=\"margin: 0; padding: 0px;\">\n<head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta content=\"text/html; charset=utf-8\" http-equiv=\"Content-Type\">\n    <!--[if !mso]><!-- -->\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n    <!--<![endif]-->\n    <style type=\"text/css\">\n        body{\n            margin:0;\n            padding:0;\n            line-height: 1;\n        }\n        img{\n            border:0 none;\n            height:auto;\n            line-height:100%;\n            outline:none;\n            text-decoration:none;\n            display:block;\n        }\n            a img{\n            border:0 none;\n        }\n        table, td{\n            border-collapse: collapse;\n            border-spacing: 0;\n            padding:0px;\n        }\n        #bodyTable{\n            height:100% !important;\n            margin:0;\n            padding:0;\n            width:100% !important;\n        }\n    </style>\n</head>\n<body bgcolor=\"" + bgColor + "\" style=\"padding:0px;margin:0px;\">\n    <table id=\"bodyTable\" bgcolor=\"" + bgColor + "\" style=\"width: 100%; height: 100%; background-color: " + bgColor + "; margin: 0; padding:0;\">\n        <tr>\n            <td style=\"text-align: center;\" valign=\"top\">\n    " + content + "            </td>\n        </tr>\n    </table>\n</body>\n</html>";
 }
-//# sourceMappingURL=layout.js.map
 
 function convert(artboard, command, sketchVersion) {
     var data = sketchToLayers(artboard.layers(), null, command);
@@ -1604,17 +1602,16 @@ function exportAssets(context, itemIds, outputFolder) {
     var sketchFile = context.document.fileURL();
     if (!sketchFile || context.document.isDocumentEdited()) {
         NSApplication.sharedApplication().displayDialog_withTitle("To export the assets, save the Sketch file first!", "⚠️ Slinky");
-        return;
+        return true;
     }
     else {
         sketchFile = decodeURIComponent(sketchFile.toString().replace("file://", ""));
     }
     context.document.saveDocument(null);
-    var command = "/bin/bash";
     var args = [
         "-c",
-        "mkdir -p " + outputFolder + " && "
-            + sketchtool + ' export ' + 'slices'
+        "-l",
+        sketchtool + ' export ' + 'slices'
             + ' "' + sketchFile + '"'
             + ' --scales=2'
             + ' --formats=png'
@@ -1626,16 +1623,28 @@ function exportAssets(context, itemIds, outputFolder) {
             + ' --items="' + itemIds.join(",") + '"'
             + ' --output="' + outputFolder.replace("%20", " ") + '"'
     ];
+    return runCommand("/bin/mkdir", ["-p", outputFolder])
+        && runCommand("/bin/bash", args);
+}
+function runCommand(command, args) {
+    log("Run Command: " + command + " " + args.join(" ") + "");
     var task = NSTask.alloc().init();
     var pipe = NSPipe.pipe();
     var errPipe = NSPipe.pipe();
-    task.launchPath = command;
+    task.setLaunchPath_(command);
     task.arguments = args;
     task.standardOutput = pipe;
     task.standardError = errPipe;
-    task.launch();
+    try {
+        task.launch();
+        task.waitUntilExit();
+        return (task.terminationStatus() == 0);
+    }
+    catch (e) {
+        log("❌ Cannot run command: " + e);
+        return false;
+    }
 }
-//# sourceMappingURL=index.js.map
 
 var sidebarID = "slinky_url";
 var sidebarParent = "view_coordinates";
@@ -1721,7 +1730,6 @@ function viewSearch(nsview, identifier) {
     }
     return found;
 }
-//# sourceMappingURL=sidebar.js.map
 
 function exportHTML(context) {
     if (!context)
@@ -1741,8 +1749,8 @@ function exportHTML(context) {
         return;
     var content = convert(artboard, command, sketchVersion);
     var result = saveFile(content.table, exportPath);
-    exportAssets(context, content.assets, exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/");
-    if (result) {
+    var isAssetsExported = exportAssets(context, content.assets, exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/");
+    if (result && isAssetsExported) {
         var workspace = NSWorkspace.sharedWorkspace();
         var updateUrl = NSURL.URLWithString("file://" + exportPath);
         workspace.openURL(updateUrl);
@@ -1769,7 +1777,7 @@ function onSelectionChanged(context) {
     if (url !== "multiple") {
         selection.forEach(function (layer) {
             var value = unescape(context.command.valueForKey_onLayer('hrefURL', layer));
-            if (url.length === 0 && value.length === 0)
+            if (!url || (url.length === 0 && value.length === 0))
                 return;
             context.command.setValue_forKey_onLayer(url, 'hrefURL', layer);
         });
@@ -1779,4 +1787,3 @@ function onSelectionChanged(context) {
 var exportHTMLFunc = exportHTML();
 var toggleURLFunc = toggleURL();
 var selectionChangeFunc = onSelectionChanged();
-//# sourceMappingURL=Slinky.js.map

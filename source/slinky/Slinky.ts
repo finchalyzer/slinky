@@ -29,13 +29,13 @@ function exportHTML(context?: SketchContext) {
    const result = saveFile(content.table, exportPath)
 
    // Export assets
-   exportAssets(
+   const isAssetsExported = exportAssets(
       context,
       content.assets,
       exportPath.substring(0, exportPath.lastIndexOf("/")) + "/assets/"
    )
 
-   if(result){
+   if(result && isAssetsExported){
       const workspace = NSWorkspace.sharedWorkspace()
       const updateUrl = NSURL.URLWithString(`file://${exportPath}`)
       workspace.openURL(updateUrl)
@@ -69,11 +69,10 @@ function onSelectionChanged(context?: SketchContext){
 
    if(url !== "multiple"){
       selection.forEach(layer => {
-
          const value = unescape(context.command.valueForKey_onLayer('hrefURL', layer))
 
-         if(url.length === 0 && value.length === 0) return
-
+         if(!url || (url.length === 0 && value.length === 0)) return
+         
          context.command.setValue_forKey_onLayer(url, 'hrefURL', layer)
 
       })
