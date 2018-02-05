@@ -1281,12 +1281,10 @@ function createTable(layers, size) {
                     depth: size.depth + 4
                 };
                 var cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize);
-                result += indent(size.depth + 2, "<td style=\"" + cellStyle + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
+                result += indent(size.depth + 2, "<td style=\"" + cellStyle + " " + getCellStyle(layers[cell], childTableSize, { x: cellOffsetX, y: cellOffsetY }) + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
                 if (layers[cell].url)
                     result += indent(size.depth + 3, "<a href=\"" + formatLink(layers[cell].url) + "\" style=\"text-decoration:none;\">");
-                result += indent(size.depth + 3, "<div style=\"" + getCellStyle(layers[cell], childTableSize, { x: cellOffsetX, y: cellOffsetY }) + "\">");
                 result += cellContent;
-                result += indent(size.depth + 3, "</div>");
                 if (layers[cell].url)
                     result += indent(size.depth + 3, "</a>");
                 result += indent(size.depth + 2, "</td>");
@@ -1341,7 +1339,7 @@ function getCellContent(layer, depth, size) {
     return "";
 }
 function getCellStyle(layer, size, offset) {
-    var style = "display:block;";
+    var style = "";
     var width = size.width;
     var height = size.height;
     if (offset.x)
@@ -1460,12 +1458,12 @@ function sketchToLayers(layerGroup, offset, command) {
                         border: borderWidth,
                         css: layerCSS,
                         content: (layer.class() == MSTextLayer) ? splitText(layer) : null,
-                        source: (layer.isLayerExportable()) ? "assets/" + unescape(layer.objectID()) + "@2x.png" : null,
+                        source: (layer.isLayerExportable()) ? "assets/" + unescape(layer.name()) + ".png" : null,
                         children: []
                     });
                 }
                 if (layer.isLayerExportable()) {
-                    assets.push(unescape(layer.objectID()));
+                    assets.push(unescape(layer.name()));
                 }
             }
         }
@@ -1554,6 +1552,7 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
+//# sourceMappingURL=convert.js.map
 
 var pluginIdentifier = "com.sketchapp.slinky-plugin";
 function setPreferences(key, value) {
@@ -1612,9 +1611,9 @@ function exportAssets(context, itemIds, outputFolder) {
         "-l",
         sketchtool + ' export ' + 'slices'
             + ' "' + sketchFile + '"'
-            + ' --scales=2'
+            + ' --scales=1'
             + ' --formats=png'
-            + ' --use-id-for-name=yes'
+            + ' --use-id-for-name=no'
             + ' --group-contents-only="yes"'
             + ' --save-for-web="no"'
             + ' --overwriting="yes"'
@@ -1644,7 +1643,6 @@ function runCommand(command, args) {
         return false;
     }
 }
-//# sourceMappingURL=index.js.map
 
 var sidebarID = "slinky_url";
 var sidebarParent = "view_coordinates";

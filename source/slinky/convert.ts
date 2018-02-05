@@ -221,13 +221,11 @@ function createTable(layers: Layer[], size: TableSize){
             // Prepare cell's content
             const cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize)
 
-            result +=  indent(size.depth + 2, `<td style="${cellStyle}" colspan="${colspan}" rowspan="${rowspan}">`)
+            result +=  indent(size.depth + 2, `<td style="${cellStyle} ${getCellStyle(layers[cell], childTableSize, {x: cellOffsetX, y: cellOffsetY})}" colspan="${colspan}" rowspan="${rowspan}">`)
 
             if(layers[cell].url) result += indent(size.depth + 3, `<a href="${formatLink(layers[cell].url)}" style="text-decoration:none;">`)
 
-            result +=  indent(size.depth + 3, `<div style="${getCellStyle(layers[cell], childTableSize, {x: cellOffsetX, y: cellOffsetY})}">`)
             result +=  cellContent
-            result +=  indent(size.depth + 3, `</div>`)
 
             if(layers[cell].url) result += indent(size.depth + 3, `</a>`)
 
@@ -312,7 +310,7 @@ function getCellContent(layer: Layer, depth: number, size: TableSize){
 
 function getCellStyle(layer: Layer, size: TableSize, offset: {x: number, y: number}){
 
-   let style = "display:block;"
+   let style = ""
 
    let width = size.width
    let height = size.height
@@ -483,14 +481,14 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}, 
                   border: borderWidth,
                   css: layerCSS,
                   content: (layer.class() == MSTextLayer) ? splitText(layer) : null,
-                  source: (layer.isLayerExportable()) ? `assets/${unescape(layer.objectID())}@2x.png` : null,
+                  source: (layer.isLayerExportable()) ? `assets/${unescape(layer.name())}.png` : null,
                   children: []
                })
 
             }
 
             if(layer.isLayerExportable()){
-               assets.push(unescape(layer.objectID()))
+               assets.push(unescape(layer.name()))
             }
 
          }
