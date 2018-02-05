@@ -93,7 +93,7 @@ export function exportAssets(context: SketchContext, itemIds: string[], outputFo
       + ' "' + sketchFile + '"'
       + ' --scales=2'
       + ' --formats=png'
-      + ' --use-id-for-name=yes'
+      + ' --use-id-for-name=no'
       + ' --group-contents-only="yes"'
       + ' --save-for-web="no"'
       + ' --overwriting="yes"'

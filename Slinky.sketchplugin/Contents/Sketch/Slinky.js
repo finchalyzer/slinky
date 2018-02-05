@@ -1458,12 +1458,12 @@ function sketchToLayers(layerGroup, offset, command) {
                         border: borderWidth,
                         css: layerCSS,
                         content: (layer.class() == MSTextLayer) ? splitText(layer) : null,
-                        source: (layer.isLayerExportable()) ? "assets/" + unescape(layer.objectID()) + "@2x.png" : null,
+                        source: (layer.isLayerExportable()) ? "assets/" + unescape(layer.name()) + ".png" : null,
                         children: []
                     });
                 }
                 if (layer.isLayerExportable()) {
-                    assets.push(unescape(layer.objectID()));
+                    assets.push(unescape(layer.name()));
                 }
             }
         }
@@ -1552,6 +1552,7 @@ function parseCSSAttributes(attributes) {
     });
     return result;
 }
+//# sourceMappingURL=convert.js.map
 
 var pluginIdentifier = "com.sketchapp.slinky-plugin";
 function setPreferences(key, value) {
@@ -1610,9 +1611,9 @@ function exportAssets(context, itemIds, outputFolder) {
         "-l",
         sketchtool + ' export ' + 'slices'
             + ' "' + sketchFile + '"'
-            + ' --scales=2'
+            + ' --scales=1'
             + ' --formats=png'
-            + ' --use-id-for-name=yes'
+            + ' --use-id-for-name=no'
             + ' --group-contents-only="yes"'
             + ' --save-for-web="no"'
             + ' --overwriting="yes"'
@@ -1642,7 +1643,6 @@ function runCommand(command, args) {
         return false;
     }
 }
-//# sourceMappingURL=index.js.map
 
 var sidebarID = "slinky_url";
 var sidebarParent = "view_coordinates";

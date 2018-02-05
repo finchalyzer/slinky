@@ -481,14 +481,14 @@ function sketchToLayers(layerGroup: MSLayer[], offset?: {x: number, y: number}, 
                   border: borderWidth,
                   css: layerCSS,
                   content: (layer.class() == MSTextLayer) ? splitText(layer) : null,
-                  source: (layer.isLayerExportable()) ? `assets/${unescape(layer.objectID())}@2x.png` : null,
+                  source: (layer.isLayerExportable()) ? `assets/${unescape(layer.name())}.png` : null,
                   children: []
                })
 
             }
 
             if(layer.isLayerExportable()){
-               assets.push(unescape(layer.objectID()))
+               assets.push(unescape(layer.name()))
             }
 
          }
