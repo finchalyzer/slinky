@@ -1281,12 +1281,10 @@ function createTable(layers, size) {
                     depth: size.depth + 4
                 };
                 var cellContent = (layers[cell].children.length === 0) ? getCellContent(layers[cell], size.depth, childTableSize) : createTable(layers[cell].children, childTableSize);
-                result += indent(size.depth + 2, "<td style=\"" + cellStyle + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
+                result += indent(size.depth + 2, "<td style=\"" + cellStyle + " " + getCellStyle(layers[cell], childTableSize, { x: cellOffsetX, y: cellOffsetY }) + "\" colspan=\"" + colspan + "\" rowspan=\"" + rowspan + "\">");
                 if (layers[cell].url)
                     result += indent(size.depth + 3, "<a href=\"" + formatLink(layers[cell].url) + "\" style=\"text-decoration:none;\">");
-                result += indent(size.depth + 3, "<div style=\"" + getCellStyle(layers[cell], childTableSize, { x: cellOffsetX, y: cellOffsetY }) + "\">");
                 result += cellContent;
-                result += indent(size.depth + 3, "</div>");
                 if (layers[cell].url)
                     result += indent(size.depth + 3, "</a>");
                 result += indent(size.depth + 2, "</td>");
@@ -1341,7 +1339,7 @@ function getCellContent(layer, depth, size) {
     return "";
 }
 function getCellStyle(layer, size, offset) {
-    var style = "display:block;";
+    var style = "";
     var width = size.width;
     var height = size.height;
     if (offset.x)
