@@ -16,20 +16,20 @@
          "name" : "Export selected artboard",
          "description": "Export selected artboard to HTML email template",
          "identifier" : "slinky-export",
-         "shortcut": "cmd alt e",
+         "shortcut": "cmd alt e"
       },
       {
          "script" : "Slinky.js",
          "handler" : "toggleURL",
          "name" : "Show/Hide Link URL",
          "description": "Add a link to elements",
-         "identifier" : "slinky-url-toggle",
+         "identifier" : "slinky-url-toggle"
       },
       {
          "script" : "Slinky.js",
          "handlers" : {
             "actions" : {
-               "SelectionChanged.finish" : "onSelectionChanged",
+               "SelectionChanged.finish" : "onSelectionChanged"
             }
          }
       }
